@@ -1,0 +1,839 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Ты моя вселенная ✨</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,400;0,700;1,400&family=Inter:wght@300;400;500&display=swap" rel="stylesheet" />
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+    :root {
+      --rose:   #e8a0b0;
+      --deep:   #c4637a;
+      --gold:   #f0c97a;
+      --bg:     #0d0810;
+      --surface: rgba(255,255,255,0.04);
+      --text:   #f5e8ec;
+      --muted:  rgba(245,232,236,0.5);
+    }
+
+    html { scroll-behavior: smooth; }
+
+    body {
+      background: var(--bg);
+      color: var(--text);
+      font-family: 'Inter', sans-serif;
+      overflow-x: hidden;
+      cursor: none;
+    }
+
+    /* ── Custom cursor ── */
+    #cursor {
+      width: 12px; height: 12px;
+      background: var(--rose);
+      border-radius: 50%;
+      position: fixed;
+      pointer-events: none;
+      z-index: 9999;
+      transform: translate(-50%, -50%);
+      transition: transform 0.1s, width 0.2s, height 0.2s, background 0.2s;
+      mix-blend-mode: screen;
+    }
+    #cursor-ring {
+      width: 36px; height: 36px;
+      border: 1.5px solid var(--rose);
+      border-radius: 50%;
+      position: fixed;
+      pointer-events: none;
+      z-index: 9998;
+      transform: translate(-50%, -50%);
+      transition: left 0.12s ease-out, top 0.12s ease-out, width 0.2s, height 0.2s;
+      opacity: 0.5;
+    }
+
+    /* ── Particles canvas ── */
+    #particles { position: fixed; inset: 0; z-index: 0; pointer-events: none; }
+
+    /* ── Hero ── */
+    #hero {
+      position: relative;
+      min-height: 100vh;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      text-align: center;
+      z-index: 1;
+      padding: 40px 20px;
+    }
+
+    #hero::before {
+      content: '';
+      position: absolute;
+      inset: 0;
+      background: radial-gradient(ellipse 80% 60% at 50% 60%, rgba(196,99,122,0.18) 0%, transparent 70%);
+      pointer-events: none;
+    }
+
+    .hero-eyebrow {
+      font-size: 13px;
+      letter-spacing: 4px;
+      text-transform: uppercase;
+      color: var(--rose);
+      margin-bottom: 20px;
+      opacity: 0;
+      animation: fadeUp 1s 0.3s forwards;
+    }
+
+    .hero-title {
+      font-family: 'Playfair Display', serif;
+      font-size: clamp(42px, 8vw, 96px);
+      line-height: 1.1;
+      background: linear-gradient(135deg, #f5e8ec 0%, var(--rose) 50%, var(--gold) 100%);
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+      background-clip: text;
+      opacity: 0;
+      animation: fadeUp 1s 0.6s forwards;
+    }
+
+    .hero-sub {
+      margin-top: 24px;
+      font-size: 16px;
+      color: var(--muted);
+      font-weight: 300;
+      max-width: 400px;
+      line-height: 1.7;
+      opacity: 0;
+      animation: fadeUp 1s 0.9s forwards;
+    }
+
+    .heart-btn {
+      margin-top: 40px;
+      padding: 14px 36px;
+      border-radius: 50px;
+      border: 1px solid rgba(232,160,176,0.4);
+      background: rgba(232,160,176,0.1);
+      color: var(--rose);
+      font-family: 'Inter', sans-serif;
+      font-size: 14px;
+      letter-spacing: 2px;
+      text-transform: uppercase;
+      cursor: pointer;
+      transition: background 0.3s, transform 0.2s;
+      opacity: 0;
+      animation: fadeUp 1s 1.2s forwards;
+    }
+    .heart-btn:hover { background: rgba(232,160,176,0.25); transform: scale(1.04); }
+
+    .scroll-hint {
+      position: absolute;
+      bottom: 32px;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 8px;
+      color: var(--muted);
+      font-size: 12px;
+      letter-spacing: 2px;
+      opacity: 0;
+      animation: fadeUp 1s 1.6s forwards;
+    }
+    .scroll-line {
+      width: 1px; height: 50px;
+      background: linear-gradient(to bottom, var(--rose), transparent);
+      animation: scrollLine 2s 2s infinite;
+    }
+
+    /* ── Compliment counter ── */
+    #counter-section {
+      position: relative;
+      z-index: 1;
+      display: flex;
+      justify-content: center;
+      gap: 60px;
+      padding: 60px 20px;
+      flex-wrap: wrap;
+    }
+
+    .counter-item {
+      text-align: center;
+      opacity: 0;
+      transform: translateY(30px);
+      transition: opacity 0.7s, transform 0.7s;
+    }
+    .counter-item.visible { opacity: 1; transform: none; }
+
+    .counter-num {
+      font-family: 'Playfair Display', serif;
+      font-size: 56px;
+      background: linear-gradient(135deg, var(--rose), var(--gold));
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+      background-clip: text;
+      line-height: 1;
+    }
+    .counter-label {
+      margin-top: 8px;
+      font-size: 12px;
+      letter-spacing: 3px;
+      text-transform: uppercase;
+      color: var(--muted);
+    }
+
+    /* ── Divider ── */
+    .divider {
+      display: flex;
+      align-items: center;
+      gap: 20px;
+      padding: 0 40px;
+      z-index: 1;
+      position: relative;
+    }
+    .divider-line { flex: 1; height: 1px; background: rgba(232,160,176,0.15); }
+    .divider-icon { color: var(--rose); font-size: 18px; }
+
+    /* ── Photo cards ── */
+    #gallery {
+      position: relative;
+      z-index: 1;
+      padding: 80px 20px;
+      max-width: 1100px;
+      margin: 0 auto;
+      display: flex;
+      flex-direction: column;
+      gap: 120px;
+    }
+
+    .photo-row {
+      display: flex;
+      align-items: center;
+      gap: 60px;
+      opacity: 0;
+      transform: translateY(50px);
+      transition: opacity 0.9s, transform 0.9s;
+    }
+    .photo-row.visible { opacity: 1; transform: none; }
+    .photo-row:nth-child(even) { flex-direction: row-reverse; }
+
+    .photo-wrap {
+      flex: 0 0 auto;
+      position: relative;
+      width: min(340px, 90vw);
+    }
+
+    .photo-frame {
+      position: relative;
+      border-radius: 20px;
+      overflow: hidden;
+      cursor: pointer;
+      box-shadow: 0 20px 60px rgba(0,0,0,0.5);
+    }
+
+    .photo-frame img {
+      width: 100%;
+      display: block;
+      transition: transform 0.6s ease;
+    }
+    .photo-frame:hover img { transform: scale(1.04); }
+
+    /* shimmer overlay on hover */
+    .photo-frame::after {
+      content: '';
+      position: absolute;
+      inset: 0;
+      background: linear-gradient(135deg, transparent 30%, rgba(232,160,176,0.15) 50%, transparent 70%);
+      transform: translateX(-100%);
+      transition: transform 0.7s;
+    }
+    .photo-frame:hover::after { transform: translateX(100%); }
+
+    /* floating badge */
+    .photo-badge {
+      position: absolute;
+      top: -16px;
+      right: -16px;
+      width: 52px; height: 52px;
+      background: linear-gradient(135deg, var(--deep), var(--rose));
+      border-radius: 50%;
+      display: flex; align-items: center; justify-content: center;
+      font-size: 22px;
+      box-shadow: 0 8px 20px rgba(196,99,122,0.5);
+      animation: pulse 2.5s infinite;
+    }
+
+    .photo-number {
+      position: absolute;
+      bottom: 16px;
+      left: 16px;
+      font-family: 'Playfair Display', serif;
+      font-size: 64px;
+      color: rgba(255,255,255,0.08);
+      line-height: 1;
+      user-select: none;
+    }
+
+    /* ── Compliment card ── */
+    .compliment-card {
+      flex: 1;
+      min-width: 0;
+    }
+
+    .comp-tag {
+      display: inline-block;
+      padding: 4px 14px;
+      border-radius: 20px;
+      border: 1px solid rgba(232,160,176,0.3);
+      font-size: 11px;
+      letter-spacing: 2px;
+      text-transform: uppercase;
+      color: var(--rose);
+      margin-bottom: 20px;
+    }
+
+    .comp-title {
+      font-family: 'Playfair Display', serif;
+      font-size: clamp(26px, 4vw, 38px);
+      line-height: 1.2;
+      margin-bottom: 20px;
+    }
+
+    .comp-text {
+      font-size: 15px;
+      color: var(--muted);
+      line-height: 1.8;
+      font-weight: 300;
+    }
+
+    /* Reveal extra compliment */
+    .comp-extra {
+      margin-top: 24px;
+      overflow: hidden;
+      max-height: 0;
+      transition: max-height 0.6s ease;
+    }
+    .comp-extra.open { max-height: 200px; }
+    .comp-extra-text {
+      padding: 16px 20px;
+      background: rgba(232,160,176,0.07);
+      border-left: 2px solid var(--rose);
+      border-radius: 0 10px 10px 0;
+      font-size: 14px;
+      color: var(--text);
+      line-height: 1.7;
+      font-style: italic;
+    }
+
+    .reveal-btn {
+      margin-top: 20px;
+      background: none;
+      border: 1px solid rgba(232,160,176,0.3);
+      color: var(--rose);
+      padding: 10px 24px;
+      border-radius: 30px;
+      font-size: 13px;
+      font-family: 'Inter', sans-serif;
+      cursor: pointer;
+      transition: background 0.3s, transform 0.2s;
+      letter-spacing: 1px;
+    }
+    .reveal-btn:hover { background: rgba(232,160,176,0.1); transform: scale(1.03); }
+
+    /* ── Love meter ── */
+    #love-meter {
+      position: relative;
+      z-index: 1;
+      max-width: 600px;
+      margin: 0 auto 100px;
+      padding: 50px 40px;
+      background: var(--surface);
+      border: 1px solid rgba(232,160,176,0.1);
+      border-radius: 24px;
+      text-align: center;
+      backdrop-filter: blur(10px);
+    }
+
+    .meter-title {
+      font-family: 'Playfair Display', serif;
+      font-size: 28px;
+      margin-bottom: 8px;
+    }
+    .meter-sub { color: var(--muted); font-size: 14px; margin-bottom: 32px; }
+
+    .meter-bar-wrap {
+      background: rgba(255,255,255,0.06);
+      border-radius: 50px;
+      height: 10px;
+      overflow: visible;
+      position: relative;
+      margin-bottom: 12px;
+    }
+    .meter-bar {
+      height: 100%;
+      border-radius: 50px;
+      background: linear-gradient(90deg, var(--deep), var(--rose), var(--gold));
+      width: 0%;
+      transition: width 2s cubic-bezier(.2,.8,.3,1);
+      position: relative;
+    }
+    .meter-bar::after {
+      content: '💖';
+      position: absolute;
+      right: -12px;
+      top: 50%;
+      transform: translateY(-50%);
+      font-size: 20px;
+      filter: drop-shadow(0 0 8px rgba(232,160,176,0.8));
+    }
+    .meter-value {
+      font-family: 'Playfair Display', serif;
+      font-size: 48px;
+      background: linear-gradient(135deg, var(--rose), var(--gold));
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+      background-clip: text;
+    }
+    .meter-label { font-size: 13px; color: var(--muted); letter-spacing: 2px; }
+
+    /* ── Quotes carousel ── */
+    #quotes {
+      position: relative;
+      z-index: 1;
+      max-width: 700px;
+      margin: 0 auto 100px;
+      padding: 0 20px;
+      text-align: center;
+    }
+
+    .quotes-label {
+      font-size: 12px;
+      letter-spacing: 4px;
+      text-transform: uppercase;
+      color: var(--rose);
+      margin-bottom: 32px;
+    }
+
+    .quote-slide {
+      display: none;
+      opacity: 0;
+      transform: translateY(10px);
+      transition: opacity 0.5s, transform 0.5s;
+    }
+    .quote-slide.active {
+      display: block;
+      opacity: 1;
+      transform: none;
+    }
+
+    .quote-text {
+      font-family: 'Playfair Display', serif;
+      font-size: clamp(20px, 3.5vw, 30px);
+      line-height: 1.5;
+      margin-bottom: 20px;
+    }
+    .quote-author { color: var(--rose); font-size: 13px; letter-spacing: 1px; }
+
+    .quote-dots {
+      display: flex;
+      justify-content: center;
+      gap: 8px;
+      margin-top: 28px;
+    }
+    .q-dot {
+      width: 6px; height: 6px;
+      border-radius: 50%;
+      background: rgba(232,160,176,0.3);
+      cursor: pointer;
+      transition: background 0.3s, transform 0.2s;
+    }
+    .q-dot.active { background: var(--rose); transform: scale(1.4); }
+
+    /* ── Floating hearts container ── */
+    #float-hearts { position: fixed; inset: 0; pointer-events: none; z-index: 2; }
+
+    /* ── Footer ── */
+    footer {
+      position: relative;
+      z-index: 1;
+      text-align: center;
+      padding: 60px 20px 80px;
+      border-top: 1px solid rgba(232,160,176,0.1);
+    }
+    .footer-title {
+      font-family: 'Playfair Display', serif;
+      font-size: 32px;
+      margin-bottom: 12px;
+    }
+    .footer-sub { color: var(--muted); font-size: 14px; }
+
+    /* ── Animations ── */
+    @keyframes fadeUp {
+      from { opacity: 0; transform: translateY(20px); }
+      to   { opacity: 1; transform: none; }
+    }
+    @keyframes scrollLine {
+      0%   { transform: scaleY(0); transform-origin: top; }
+      50%  { transform: scaleY(1); transform-origin: top; }
+      51%  { transform: scaleY(1); transform-origin: bottom; }
+      100% { transform: scaleY(0); transform-origin: bottom; }
+    }
+    @keyframes pulse {
+      0%, 100% { transform: scale(1); box-shadow: 0 8px 20px rgba(196,99,122,0.5); }
+      50%       { transform: scale(1.12); box-shadow: 0 12px 30px rgba(196,99,122,0.7); }
+    }
+    @keyframes floatHeart {
+      0%   { opacity: 1; transform: translateY(0) scale(1) rotate(var(--r)); }
+      100% { opacity: 0; transform: translateY(-120px) scale(0.4) rotate(calc(var(--r) + 30deg)); }
+    }
+    @keyframes sparkle {
+      0%, 100% { opacity: 0; transform: scale(0); }
+      50%       { opacity: 1; transform: scale(1); }
+    }
+
+    /* ── Mobile ── */
+    @media (max-width: 680px) {
+      .photo-row, .photo-row:nth-child(even) { flex-direction: column; gap: 30px; }
+      #counter-section { gap: 30px; }
+      #love-meter { padding: 36px 24px; }
+    }
+  </style>
+</head>
+<body>
+
+<canvas id="particles"></canvas>
+<div id="cursor"></div>
+<div id="cursor-ring"></div>
+<div id="float-hearts"></div>
+
+<!-- ── Hero ── -->
+<section id="hero">
+  <p class="hero-eyebrow">Посвящается тебе</p>
+  <h1 class="hero-title">Ты моя<br/>вселенная</h1>
+  <p class="hero-sub">Каждый раз, когда я смотрю на тебя, я понимаю, что мне повезло больше всех на свете.</p>
+  <button class="heart-btn" id="shower-btn">Получить сердечки 💗</button>
+  <div class="scroll-hint">
+    <span>листай вниз</span>
+    <div class="scroll-line"></div>
+  </div>
+</section>
+
+<!-- ── Counters ── -->
+<section id="counter-section">
+  <div class="counter-item">
+    <div class="counter-num" data-target="∞">0</div>
+    <div class="counter-label">Причин любить</div>
+  </div>
+  <div class="counter-item">
+    <div class="counter-num" data-target="365">0</div>
+    <div class="counter-label">Дней счастья</div>
+  </div>
+  <div class="counter-item">
+    <div class="counter-num" data-target="100">0</div>
+    <div class="counter-label">% моего сердца</div>
+  </div>
+</section>
+
+<div class="divider"><div class="divider-line"></div><div class="divider-icon">✦</div><div class="divider-line"></div></div>
+
+<!-- ── Gallery ── -->
+<section id="gallery">
+
+  <!-- Photo 1 -->
+  <div class="photo-row">
+    <div class="photo-wrap">
+      <div class="photo-frame" onclick="spawnHeartsAt(event)">
+        <img src="photo1.jpg" alt="Фото 1" loading="lazy" />
+        <div class="photo-number">01</div>
+      </div>
+      <div class="photo-badge">✨</div>
+    </div>
+    <div class="compliment-card">
+      <span class="comp-tag">Взгляд</span>
+      <h2 class="comp-title">Глаза, в которых<br/>можно утонуть</h2>
+      <p class="comp-text">Твои глаза — это целый океан. Один взгляд — и весь мир исчезает. В них столько теплоты, глубины и нежности, что невозможно оторваться.</p>
+      <div class="comp-extra" id="extra-1">
+        <p class="comp-extra-text">«Ты смотришь — и сразу становится ясно, что красота бывает настоящей. Не придуманной, не нарисованной — живой, твоей.»</p>
+      </div>
+      <button class="reveal-btn" onclick="toggleExtra(1, this)">Читать ещё ✦</button>
+    </div>
+  </div>
+
+  <!-- Photo 2 -->
+  <div class="photo-row">
+    <div class="photo-wrap">
+      <div class="photo-frame" onclick="spawnHeartsAt(event)">
+        <img src="photo2.jpg" alt="Фото 2" loading="lazy" />
+        <div class="photo-number">02</div>
+      </div>
+      <div class="photo-badge">💫</div>
+    </div>
+    <div class="compliment-card">
+      <span class="comp-tag">Загадочность</span>
+      <h2 class="comp-title">Тайна, которую<br/>хочется разгадать</h2>
+      <p class="comp-text">В тебе есть что-то неуловимое — та самая магия, которая притягивает и не отпускает. Ты умеешь быть одновременно нежной и сильной, мягкой и яркой.</p>
+      <div class="comp-extra" id="extra-2">
+        <p class="comp-extra-text">«Ты не просто красивая — ты интересная. Каждый раз я открываю в тебе что-то новое, и это делает меня счастливее.»</p>
+      </div>
+      <button class="reveal-btn" onclick="toggleExtra(2, this)">Читать ещё ✦</button>
+    </div>
+  </div>
+
+  <!-- Photo 3 -->
+  <div class="photo-row">
+    <div class="photo-wrap">
+      <div class="photo-frame" onclick="spawnHeartsAt(event)">
+        <img src="photo3.jpg" alt="Фото 3" loading="lazy" />
+        <div class="photo-number">03</div>
+      </div>
+      <div class="photo-badge">🌸</div>
+    </div>
+    <div class="compliment-card">
+      <span class="comp-tag">Нежность</span>
+      <h2 class="comp-title">Мягче весны,<br/>теплее солнца</h2>
+      <p class="comp-text">Когда ты лежишь вот так — время останавливается. Ты выглядишь так спокойно и прекрасно, как будто весь мир существует только чтобы быть рядом с тобой.</p>
+      <div class="comp-extra" id="extra-3">
+        <p class="comp-extra-text">«Твоя красота — это не просто внешность. Это то, как ты существуешь в этом мире — легко, естественно, абсолютно по-своему.»</p>
+      </div>
+      <button class="reveal-btn" onclick="toggleExtra(3, this)">Читать ещё ✦</button>
+    </div>
+  </div>
+
+  <!-- Photo 4 -->
+  <div class="photo-row">
+    <div class="photo-wrap">
+      <div class="photo-frame" onclick="spawnHeartsAt(event)">
+        <img src="photo4.jpg" alt="Фото 4" loading="lazy" />
+        <div class="photo-number">04</div>
+      </div>
+      <div class="photo-badge">👑</div>
+    </div>
+    <div class="compliment-card">
+      <span class="comp-tag">Уверенность</span>
+      <h2 class="comp-title">Царица, которая<br/>не знает правил</h2>
+      <p class="comp-text">Есть люди, которые просто светятся. Ты — из таких. Эта лёгкость, эта уверенность — не напоказ, а настоящая. Именно за это я влюблён в тебя каждый день заново.</p>
+      <div class="comp-extra" id="extra-4">
+        <p class="comp-extra-text">«Ты держишься так, словно весь мир создан специально для тебя. И знаешь что? Наверное, так оно и есть.»</p>
+      </div>
+      <button class="reveal-btn" onclick="toggleExtra(4, this)">Читать ещё ✦</button>
+    </div>
+  </div>
+
+</section>
+
+<!-- ── Love meter ── -->
+<section id="love-meter">
+  <h2 class="meter-title">Моя любовь к тебе</h2>
+  <p class="meter-sub">Измеряется только бесконечностью</p>
+  <div class="meter-bar-wrap">
+    <div class="meter-bar" id="meter-bar"></div>
+  </div>
+  <div class="meter-value" id="meter-val">0%</div>
+  <div class="meter-label">и растёт с каждым днём</div>
+</section>
+
+<!-- ── Quotes ── -->
+<section id="quotes">
+  <p class="quotes-label">Слова для тебя</p>
+  <div class="quote-slide active">
+    <p class="quote-text">«Ты не просто красивая — ты та, ради которой хочется быть лучшей версией себя.»</p>
+    <p class="quote-author">— С любовью, твой</p>
+  </div>
+  <div class="quote-slide">
+    <p class="quote-text">«Каждое утро я просыпаюсь и думаю: как мне так повезло, что рядом именно ты?»</p>
+    <p class="quote-author">— Всегда твой</p>
+  </div>
+  <div class="quote-slide">
+    <p class="quote-text">«Твоя улыбка — мой любимый вид на свете. Дороже всех закатов и рассветов.»</p>
+    <p class="quote-author">— Навсегда твой</p>
+  </div>
+  <div class="quote-slide">
+    <p class="quote-text">«Я мог бы написать тысячу причин, почему люблю тебя. Но проще сказать: за всё.»</p>
+    <p class="quote-author">— Безвозвратно твой</p>
+  </div>
+  <div class="quote-dots" id="q-dots"></div>
+</section>
+
+<footer>
+  <div class="footer-title">Ты моя ✨</div>
+  <p class="footer-sub">Сделано с любовью · только для тебя</p>
+</footer>
+
+<script>
+// ── Cursor ────────────────────────────────────────────────────────────────────
+const cur = document.getElementById('cursor');
+const ring = document.getElementById('cursor-ring');
+let mx = 0, my = 0;
+document.addEventListener('mousemove', e => {
+  mx = e.clientX; my = e.clientY;
+  cur.style.left = mx + 'px'; cur.style.top = my + 'px';
+  ring.style.left = mx + 'px'; ring.style.top = my + 'px';
+});
+document.querySelectorAll('button, .photo-frame, .q-dot').forEach(el => {
+  el.addEventListener('mouseenter', () => { cur.style.width='20px'; cur.style.height='20px'; ring.style.width='52px'; ring.style.height='52px'; });
+  el.addEventListener('mouseleave', () => { cur.style.width='12px'; cur.style.height='12px'; ring.style.width='36px'; ring.style.height='36px'; });
+});
+
+// ── Particles (floating dots + lines) ────────────────────────────────────────
+const canvas = document.getElementById('particles');
+const pctx = canvas.getContext('2d');
+let W, H, dots = [];
+
+function resize() { W = canvas.width = innerWidth; H = canvas.height = innerHeight; }
+resize(); window.addEventListener('resize', resize);
+
+function mkDot() {
+  return { x: Math.random()*W, y: Math.random()*H, r: Math.random()*1.5+0.5,
+           vx: (Math.random()-.5)*.3, vy: (Math.random()-.5)*.3, a: Math.random()*.6+.1 };
+}
+for (let i = 0; i < 80; i++) dots.push(mkDot());
+
+function drawParticles() {
+  pctx.clearRect(0,0,W,H);
+  dots.forEach(d => {
+    d.x += d.vx; d.y += d.vy;
+    if (d.x < 0) d.x = W; if (d.x > W) d.x = 0;
+    if (d.y < 0) d.y = H; if (d.y > H) d.y = 0;
+    pctx.beginPath();
+    pctx.arc(d.x, d.y, d.r, 0, Math.PI*2);
+    pctx.fillStyle = `rgba(232,160,176,${d.a})`;
+    pctx.fill();
+  });
+  // connect nearby
+  for (let i = 0; i < dots.length; i++)
+    for (let j = i+1; j < dots.length; j++) {
+      const dx = dots[i].x - dots[j].x, dy = dots[i].y - dots[j].y;
+      const dist = Math.sqrt(dx*dx+dy*dy);
+      if (dist < 100) {
+        pctx.beginPath();
+        pctx.moveTo(dots[i].x, dots[i].y);
+        pctx.lineTo(dots[j].x, dots[j].y);
+        pctx.strokeStyle = `rgba(232,160,176,${0.06*(1-dist/100)})`;
+        pctx.lineWidth = .5;
+        pctx.stroke();
+      }
+    }
+  requestAnimationFrame(drawParticles);
+}
+drawParticles();
+
+// ── Scroll animations ─────────────────────────────────────────────────────────
+const obs = new IntersectionObserver(entries => {
+  entries.forEach(e => { if (e.isIntersecting) e.target.classList.add('visible'); });
+}, { threshold: 0.15 });
+document.querySelectorAll('.photo-row, .counter-item').forEach(el => obs.observe(el));
+
+// ── Counters ──────────────────────────────────────────────────────────────────
+const counterObs = new IntersectionObserver(entries => {
+  entries.forEach(e => {
+    if (!e.isIntersecting) return;
+    const el = e.target.querySelector('.counter-num');
+    const target = el.dataset.target;
+    if (target === '∞') { animateCount(el, 0, 999, '∞'); }
+    else { animateCount(el, 0, parseInt(target), target); }
+    counterObs.unobserve(e.target);
+  });
+}, { threshold: 0.5 });
+document.querySelectorAll('.counter-item').forEach(el => counterObs.observe(el));
+
+function animateCount(el, from, to, display) {
+  const dur = 1800, start = performance.now();
+  function step(now) {
+    const t = Math.min((now-start)/dur, 1);
+    const ease = 1-Math.pow(1-t, 3);
+    const val = Math.floor(from + (to-from)*ease);
+    el.textContent = t >= 1 ? display : val;
+    if (t < 1) requestAnimationFrame(step);
+  }
+  requestAnimationFrame(step);
+}
+
+// ── Love meter ────────────────────────────────────────────────────────────────
+const meterObs = new IntersectionObserver(entries => {
+  entries.forEach(e => {
+    if (!e.isIntersecting) return;
+    const bar = document.getElementById('meter-bar');
+    const val = document.getElementById('meter-val');
+    setTimeout(() => {
+      bar.style.width = '97%';
+      let n = 0;
+      const iv = setInterval(() => {
+        n = Math.min(n+1, 97);
+        val.textContent = n + '%';
+        if (n >= 97) clearInterval(iv);
+      }, 20);
+    }, 300);
+    meterObs.unobserve(e.target);
+  });
+}, { threshold: 0.5 });
+meterObs.observe(document.getElementById('love-meter'));
+
+// ── Reveal extra ──────────────────────────────────────────────────────────────
+function toggleExtra(n, btn) {
+  const el = document.getElementById('extra-'+n);
+  const open = el.classList.toggle('open');
+  btn.textContent = open ? 'Скрыть ✦' : 'Читать ещё ✦';
+}
+
+// ── Quotes carousel ───────────────────────────────────────────────────────────
+const slides = document.querySelectorAll('.quote-slide');
+const dotsWrap = document.getElementById('q-dots');
+let current = 0;
+
+slides.forEach((_, i) => {
+  const d = document.createElement('div');
+  d.className = 'q-dot' + (i===0?' active':'');
+  d.onclick = () => goTo(i);
+  dotsWrap.appendChild(d);
+});
+
+function goTo(i) {
+  slides[current].classList.remove('active');
+  dotsWrap.children[current].classList.remove('active');
+  current = i;
+  slides[current].classList.add('active');
+  dotsWrap.children[current].classList.add('active');
+}
+
+setInterval(() => goTo((current+1) % slides.length), 4000);
+
+// ── Floating hearts on click ──────────────────────────────────────────────────
+const fh = document.getElementById('float-hearts');
+
+function spawnHeartsAt(e) {
+  const rect = e.currentTarget.getBoundingClientRect();
+  const cx = rect.left + rect.width/2, cy = rect.top + rect.height/2;
+  spawnHearts(cx, cy, 8);
+}
+
+function spawnHearts(x, y, count) {
+  const emojis = ['💖','💗','💝','✨','🌸','💓'];
+  for (let i = 0; i < count; i++) {
+    const h = document.createElement('div');
+    const angle = (Math.random()*60-30) + 'deg';
+    h.style.cssText = `
+      position:fixed; left:${x}px; top:${y}px;
+      font-size:${16+Math.random()*16}px;
+      pointer-events:none; z-index:100;
+      --r:${angle};
+      animation: floatHeart ${0.8+Math.random()*0.6}s ease-out forwards;
+      animation-delay:${i*60}ms;
+    `;
+    h.textContent = emojis[Math.floor(Math.random()*emojis.length)];
+    fh.appendChild(h);
+    h.addEventListener('animationend', () => h.remove());
+  }
+}
+
+// ── Heart shower button ───────────────────────────────────────────────────────
+document.getElementById('shower-btn').addEventListener('click', () => {
+  for (let i = 0; i < 5; i++) {
+    setTimeout(() => {
+      spawnHearts(Math.random()*innerWidth, Math.random()*innerHeight*0.6, 6);
+    }, i*150);
+  }
+});
+</script>
+</body>
+</html>
