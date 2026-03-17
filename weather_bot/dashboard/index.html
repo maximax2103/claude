@@ -1,0 +1,287 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Weather Trading Bot — Dashboard</title>
+  <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
+  <style>
+    :root {
+      --bg: #0f1117;
+      --surface: #1a1d2e;
+      --surface2: #252840;
+      --accent: #4f8ef7;
+      --accent2: #7c5cbf;
+      --green: #22c55e;
+      --red: #ef4444;
+      --yellow: #f59e0b;
+      --text: #e2e8f0;
+      --muted: #64748b;
+      --border: #2d3142;
+    }
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    body { font-family: 'Inter', system-ui, sans-serif; background: var(--bg); color: var(--text); min-height: 100vh; }
+
+    header {
+      display: flex; align-items: center; justify-content: space-between;
+      padding: 1rem 2rem; border-bottom: 1px solid var(--border);
+      background: var(--surface);
+    }
+    header h1 { font-size: 1.2rem; font-weight: 700; letter-spacing: -0.02em; }
+    header h1 span { color: var(--accent); }
+    #live-badge { display: flex; align-items: center; gap: 0.4rem; font-size: 0.8rem; color: var(--muted); }
+    .dot { width: 8px; height: 8px; border-radius: 50%; background: var(--green); animation: pulse 2s infinite; }
+    @keyframes pulse { 0%,100%{opacity:1} 50%{opacity:.4} }
+
+    .grid-stats {
+      display: grid; grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+      gap: 1rem; padding: 1.5rem 2rem;
+    }
+    .stat-card {
+      background: var(--surface); border: 1px solid var(--border);
+      border-radius: 12px; padding: 1rem 1.2rem;
+    }
+    .stat-card .label { font-size: 0.72rem; color: var(--muted); text-transform: uppercase; letter-spacing: 0.05em; margin-bottom: 0.4rem; }
+    .stat-card .value { font-size: 1.6rem; font-weight: 700; }
+    .stat-card .sub { font-size: 0.75rem; color: var(--muted); margin-top: 0.2rem; }
+    .pos { color: var(--green); } .neg { color: var(--red); }
+
+    .main-grid {
+      display: grid; grid-template-columns: 1fr 1fr;
+      gap: 1.5rem; padding: 0 2rem 2rem;
+    }
+    @media (max-width: 900px) { .main-grid { grid-template-columns: 1fr; } }
+
+    .card {
+      background: var(--surface); border: 1px solid var(--border);
+      border-radius: 16px; overflow: hidden;
+    }
+    .card-header {
+      padding: 1rem 1.2rem; font-size: 0.85rem; font-weight: 600;
+      border-bottom: 1px solid var(--border); color: var(--muted);
+      text-transform: uppercase; letter-spacing: 0.05em;
+    }
+    .card-body { padding: 1.2rem; }
+    canvas { max-height: 240px; }
+
+    table { width: 100%; border-collapse: collapse; font-size: 0.82rem; }
+    th { text-align: left; color: var(--muted); font-weight: 500; padding: 0.4rem 0.5rem; border-bottom: 1px solid var(--border); }
+    td { padding: 0.45rem 0.5rem; border-bottom: 1px solid var(--border); }
+    tr:last-child td { border: none; }
+
+    .badge {
+      display: inline-block; padding: 2px 8px; border-radius: 20px;
+      font-size: 0.72rem; font-weight: 600;
+    }
+    .badge-green { background: rgba(34,197,94,.15); color: var(--green); }
+    .badge-red   { background: rgba(239,68,68,.15);  color: var(--red); }
+    .badge-blue  { background: rgba(79,142,247,.15); color: var(--accent); }
+
+    .pos-item {
+      border: 1px solid var(--border); border-radius: 10px; padding: 0.8rem 1rem;
+      margin-bottom: 0.6rem; font-size: 0.8rem;
+    }
+    .pos-item .question { font-weight: 600; margin-bottom: 0.3rem; }
+    .pos-item .meta { color: var(--muted); display: flex; gap: 1rem; flex-wrap: wrap; }
+
+    #last-updated { font-size: 0.72rem; color: var(--muted); }
+  </style>
+</head>
+<body>
+
+<header>
+  <h1>Weather<span>Bot</span> Dashboard</h1>
+  <div style="display:flex;align-items:center;gap:1rem;">
+    <div id="live-badge"><div class="dot"></div><span id="last-updated">Loading…</span></div>
+  </div>
+</header>
+
+<!-- Stats row -->
+<div class="grid-stats">
+  <div class="stat-card">
+    <div class="label">Balance</div>
+    <div class="value" id="balance">—</div>
+    <div class="sub" id="roi">vs starting</div>
+  </div>
+  <div class="stat-card">
+    <div class="label">Total P&L</div>
+    <div class="value" id="total-pnl">—</div>
+  </div>
+  <div class="stat-card">
+    <div class="label">Open Positions</div>
+    <div class="value" id="open-pos">—</div>
+  </div>
+  <div class="stat-card">
+    <div class="label">Win Rate</div>
+    <div class="value" id="win-rate">—</div>
+    <div class="sub" id="wl">— W / — L</div>
+  </div>
+  <div class="stat-card">
+    <div class="label">Total Trades</div>
+    <div class="value" id="total-trades">—</div>
+  </div>
+  <div class="stat-card">
+    <div class="label">Peak Balance</div>
+    <div class="value" id="peak-balance">—</div>
+  </div>
+</div>
+
+<!-- Main grid -->
+<div class="main-grid">
+  <!-- Balance chart -->
+  <div class="card">
+    <div class="card-header">Balance History</div>
+    <div class="card-body"><canvas id="balance-chart"></canvas></div>
+  </div>
+
+  <!-- P&L by city -->
+  <div class="card">
+    <div class="card-header">P&L by City</div>
+    <div class="card-body"><canvas id="city-chart"></canvas></div>
+  </div>
+
+  <!-- Open positions -->
+  <div class="card">
+    <div class="card-header">Open Positions</div>
+    <div class="card-body" id="positions-list"><em style="color:var(--muted)">No open positions</em></div>
+  </div>
+
+  <!-- Recent trades -->
+  <div class="card">
+    <div class="card-header">Recent Trades</div>
+    <div class="card-body">
+      <table>
+        <thead>
+          <tr>
+            <th>Market</th>
+            <th>Entry</th>
+            <th>Exit</th>
+            <th>P&L</th>
+          </tr>
+        </thead>
+        <tbody id="trades-table"></tbody>
+      </table>
+    </div>
+  </div>
+</div>
+
+<script>
+  const $ = id => document.getElementById(id);
+  const fmt  = n => '$' + Number(n).toFixed(2);
+  const fmtp = n => (n >= 0 ? '+' : '') + Number(n).toFixed(2);
+  const pct  = n => (Number(n) * 100).toFixed(1) + '%';
+
+  let balChart, cityChart;
+
+  function initCharts() {
+    const ctx1 = $('balance-chart').getContext('2d');
+    balChart = new Chart(ctx1, {
+      type: 'line',
+      data: { labels: [], datasets: [{ label: 'Balance', data: [],
+        borderColor: '#4f8ef7', backgroundColor: 'rgba(79,142,247,.1)',
+        fill: true, tension: 0.4, pointRadius: 3 }] },
+      options: { responsive: true, plugins: { legend: { display: false } },
+        scales: { x: { ticks: { color: '#64748b' }, grid: { color: '#2d3142' } },
+                  y: { ticks: { color: '#64748b', callback: v => '$'+v }, grid: { color: '#2d3142' } } } }
+    });
+
+    const ctx2 = $('city-chart').getContext('2d');
+    cityChart = new Chart(ctx2, {
+      type: 'bar',
+      data: { labels: [], datasets: [{ label: 'P&L', data: [],
+        backgroundColor: [] }] },
+      options: { responsive: true, plugins: { legend: { display: false } },
+        scales: { x: { ticks: { color: '#64748b' }, grid: { color: '#2d3142' } },
+                  y: { ticks: { color: '#64748b', callback: v => '$'+v }, grid: { color: '#2d3142' } } } }
+    });
+  }
+
+  function update(data) {
+    const roi = data.starting_balance
+      ? ((data.balance - data.starting_balance) / data.starting_balance * 100).toFixed(1)
+      : 0;
+
+    $('balance').textContent = fmt(data.balance);
+    $('balance').className = 'value ' + (data.balance >= (data.starting_balance || 1000) ? 'pos' : 'neg');
+    $('roi').textContent = `${roi >= 0 ? '+' : ''}${roi}% vs starting ${fmt(data.starting_balance)}`;
+
+    const pnl = data.total_pnl || 0;
+    $('total-pnl').textContent = (pnl >= 0 ? '+' : '') + fmt(Math.abs(pnl));
+    $('total-pnl').className = 'value ' + (pnl >= 0 ? 'pos' : 'neg');
+
+    $('open-pos').textContent = Object.keys(data.positions || {}).length;
+    $('win-rate').textContent = pct(data.win_rate || 0);
+    $('wl').textContent = `${data.wins || 0} W / ${data.losses || 0} L`;
+    $('total-trades').textContent = data.total_trades || 0;
+    $('peak-balance').textContent = fmt(data.peak_balance || data.balance);
+
+    // Positions
+    const posEl = $('positions-list');
+    const positions = data.positions || {};
+    if (Object.keys(positions).length === 0) {
+      posEl.innerHTML = '<em style="color:var(--muted)">No open positions</em>';
+    } else {
+      posEl.innerHTML = Object.values(positions).map(p => `
+        <div class="pos-item">
+          <div class="question">${p.question || '—'}</div>
+          <div class="meta">
+            <span>Entry: ${Number(p.entry_price).toFixed(3)}</span>
+            <span>P(YES): ${Number(p.prob_yes || 0).toFixed(3)}</span>
+            <span>Edge: <b>${Number(p.edge || 0) >= 0 ? '+' : ''}${Number(p.edge || 0).toFixed(3)}</b></span>
+            <span>Cost: ${fmt(p.cost)}</span>
+            <span class="badge badge-blue">${p.city || ''}</span>
+          </div>
+        </div>`).join('');
+    }
+
+    // Trades table
+    const trades = (data.trades || []).slice(0, 15);
+    $('trades-table').innerHTML = trades.map(t => {
+      const pnl = Number(t.pnl || 0);
+      return `<tr>
+        <td style="max-width:200px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${t.question || '—'}</td>
+        <td>${Number(t.entry_price || 0).toFixed(3)}</td>
+        <td>${Number(t.exit_price || 0).toFixed(3)}</td>
+        <td><span class="badge ${pnl >= 0 ? 'badge-green' : 'badge-red'}">${pnl >= 0 ? '+' : ''}${fmt(Math.abs(pnl))}</span></td>
+      </tr>`;
+    }).join('');
+
+    // Balance chart
+    const bHistory = data.balance_history || [data.starting_balance, data.balance];
+    balChart.data.labels = bHistory.map((_, i) => `T${i}`);
+    balChart.data.datasets[0].data = bHistory;
+    balChart.update();
+
+    // City P&L chart
+    const cityPnl = {};
+    (data.trades || []).forEach(t => {
+      if (!t.city) return;
+      cityPnl[t.city] = (cityPnl[t.city] || 0) + (t.pnl || 0);
+    });
+    cityChart.data.labels = Object.keys(cityPnl);
+    cityChart.data.datasets[0].data = Object.values(cityPnl);
+    cityChart.data.datasets[0].backgroundColor = Object.values(cityPnl).map(
+      v => v >= 0 ? 'rgba(34,197,94,.6)' : 'rgba(239,68,68,.6)'
+    );
+    cityChart.update();
+
+    $('last-updated').textContent = 'Updated ' + new Date().toLocaleTimeString();
+  }
+
+  async function fetchData() {
+    try {
+      const resp = await fetch('simulation.json?t=' + Date.now());
+      if (!resp.ok) throw new Error(resp.status);
+      const data = await resp.json();
+      update(data);
+    } catch (e) {
+      $('last-updated').textContent = 'Error loading data';
+    }
+  }
+
+  initCharts();
+  fetchData();
+  setInterval(fetchData, 10000);
+</script>
+</body>
+</html>
