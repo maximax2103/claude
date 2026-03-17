@@ -5,6 +5,7 @@ Polymarket Price Alert Bot
 """
 
 import asyncio
+import json
 import logging
 import os
 import time
@@ -174,12 +175,30 @@ async def monitor_loop(bot: Bot):
                 token_to_info: dict[str, dict] = {}
 
                 for market in markets:
-                    tokens = market.get("tokens") or []
-                    for token in tokens:
-                        token_id = token.get("token_id")
-                        if token_id:
+                    # Gamma API возвращает токены как JSON-строку в clobTokenIds
+                    clob_ids_raw = market.get("clobTokenIds")
+                    if clob_ids_raw:
+                        try:
+                            clob_ids = json.loads(clob_ids_raw) if isinstance(clob_ids_raw, str) else clob_ids_raw
+                        except Exception:
+                            clob_ids = []
+                        outcomes_raw = market.get("outcomes")
+                        try:
+                            outcomes = json.loads(outcomes_raw) if isinstance(outcomes_raw, str) else (outcomes_raw or [])
+                        except Exception:
+                            outcomes = []
+                        for idx, token_id in enumerate(clob_ids):
+                            outcome = outcomes[idx] if idx < len(outcomes) else str(idx)
                             token_to_market[token_id] = market
-                            token_to_info[token_id] = token
+                            token_to_info[token_id] = {"token_id": token_id, "outcome": outcome}
+                    else:
+                        # Fallback: старый формат с полем tokens
+                        tokens = market.get("tokens") or []
+                        for token in tokens:
+                            token_id = token.get("token_id")
+                            if token_id:
+                                token_to_market[token_id] = market
+                                token_to_info[token_id] = token
 
                 log.info("Проверяем цены для %d токенов...", len(token_to_market))
 
