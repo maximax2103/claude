@@ -189,16 +189,19 @@ async def discover_markets(
 
         temp_range = parse_temp_range(question)
         if not temp_range:
+            logger.debug("SKIP no temp range: %s", question[:80])
             continue
 
         hours = hours_until_resolution(end_date, question)
         if not (min_hours <= hours <= max_hours):
+            logger.debug("SKIP hours=%.0f: %s", hours, question[:80])
             continue
 
         # Check it's actually about this city
         city_slugs = CITIES[city_key]["polymarket_slug_names"]
         question_lower = question.lower()
         if not any(slug in question_lower for slug in city_slugs):
+            logger.debug("SKIP city mismatch (want %s): %s", city_key, question[:80])
             continue
 
         market_id = market.get("id") or market.get("conditionId", "")
