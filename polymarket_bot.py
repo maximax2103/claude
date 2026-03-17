@@ -152,7 +152,8 @@ def format_alert(market: dict, token: dict, change_pct: float, current_price: fl
     outcome = token.get("outcome", "?")
     question = market.get("question", "Неизвестный рынок")
     volume = float(market.get("volume", 0) or 0)
-    url = f"https://polymarket.com/event/{market.get('slug', '')}"
+    slug = market.get("slug") or market.get("id", "")
+    url = f"https://polymarket.com/event/{slug}"
 
     sign = "+" if change_pct > 0 else ""
 
