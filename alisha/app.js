@@ -18,23 +18,35 @@ const App = {
   // ─── INIT ──────────────────────────────────────────────────────────────────
   async init() {
     TG.init();
-
-    // Load previous question IDs
     this.previousQuestionIds = JSON.parse(localStorage.getItem('alisha_prev_qids') || '[]');
 
-    // Init character
     const charContainer = document.getElementById('char-canvas');
-    if (charContainer) {
-      this.character = new AlinaCharacter(charContainer);
+    if (charContainer) this.character = new AlinaCharacter(charContainer);
+
+    const tgId = TG.userId;
+
+    // ① Always try to find user in DB by Telegram ID first.
+    //    This makes cross-device sync work: same TG account on PC & phone
+    //    will load the same user record from the database.
+    if (tgId) {
+      try {
+        const dbUser = await DB.getUserByTgId(tgId);
+        if (dbUser) {
+          this.user = dbUser;
+          localStorage.setItem('alisha_user', JSON.stringify(dbUser));
+          await this.showHome();
+          return;
+        }
+      } catch { /* DB unavailable — fall through to localStorage */ }
     }
 
-    // Determine starting screen
+    // ② Fallback: check localStorage (offline / new user)
     const savedUser = JSON.parse(localStorage.getItem('alisha_user') || 'null');
     if (savedUser && savedUser.display_name && savedUser.display_name !== 'Друг') {
       this.user = savedUser;
-      // Try to sync with backend
+      // Sync to DB in background so future devices pick it up
       try {
-        this.user = await DB.upsertUser(TG.userId, TG.username, savedUser.display_name);
+        this.user = await DB.upsertUser(tgId, TG.username, savedUser.display_name);
         localStorage.setItem('alisha_user', JSON.stringify(this.user));
       } catch {}
       await this.showHome();

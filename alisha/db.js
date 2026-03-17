@@ -45,12 +45,21 @@ async function apiGet(path) {
 // ─── DB OPERATIONS ─────────────────────────────────────────────────────────
 
 const DB = {
+  // Fetch existing user by telegram_id (used on first open of a new device)
+  async getUserByTgId(telegramId) {
+    if (!telegramId) return null;
+    try {
+      return await apiPost('/users/get_by_tg', { telegram_id: telegramId });
+    } catch {
+      return null;
+    }
+  },
+
   // Get or create user by telegram_id
   async upsertUser(telegramId, username, displayName) {
     try {
       return await apiPost('/users/upsert', { telegram_id: telegramId, username, display_name: displayName });
     } catch {
-      // Fallback: localStorage-only mode
       return this._localUser(telegramId, displayName);
     }
   },
