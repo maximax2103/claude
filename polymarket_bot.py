@@ -39,9 +39,25 @@ WINDOW_MINUTES = 10        # окно наблюдения в минутах
 POLL_INTERVAL = 60         # интервал опроса в секундах
 MARKETS_LIMIT = 100        # сколько топ-рынков загружать за раз
 
-# Разрешённые категории (теги рынков на Polymarket)
-ALLOWED_TAGS = {
-    "politics", "sports", "crypto", "iran", "geopolitics", "tech", "weather",
+# Ключевые слова для фильтрации рынков (ищем в названии вопроса)
+ALLOWED_KEYWORDS = {
+    # Политика
+    "election", "president", "senate", "congress", "vote", "democrat", "republican",
+    "trump", "biden", "harris", "prime minister", "parliament", "political",
+    # Геополитика / Иран
+    "iran", "war", "nato", "russia", "ukraine", "china", "israel", "gaza",
+    "sanctions", "nuclear", "military", "conflict", "ceasefire",
+    # Крипто
+    "bitcoin", "btc", "ethereum", "eth", "crypto", "solana", "xrp", "binance",
+    "coinbase", "defi", "blockchain", "sec", "etf",
+    # Спорт
+    "nba", "nfl", "mlb", "nhl", "fifa", "world cup", "championship", "super bowl",
+    "tennis", "golf", "ufc", "olympics", "league",
+    # Технологии
+    "ai", "openai", "apple", "google", "microsoft", "meta", "spacex", "elon",
+    "ipo", "tech",
+    # Погода
+    "hurricane", "storm", "earthquake", "weather", "temperature",
 }
 
 # Рынки которые слишком часто триггерят алерты — блокируем на сессию
@@ -99,19 +115,9 @@ async def fetch_active_markets(client: httpx.AsyncClient) -> list[dict]:
             if vol < MIN_VOLUME:
                 return markets
 
-            # Фильтр по категориям через теги
-            tags_raw = m.get("tags") or []
-            if isinstance(tags_raw, str):
-                try:
-                    tags_raw = json.loads(tags_raw)
-                except Exception:
-                    tags_raw = []
-            market_tags = {
-                (t.get("slug") or t.get("label") or "").lower()
-                for t in tags_raw
-                if isinstance(t, dict)
-            }
-            if not market_tags.intersection(ALLOWED_TAGS):
+            # Фильтр по ключевым словам в названии рынка
+            question_lower = (m.get("question") or "").lower()
+            if not any(kw in question_lower for kw in ALLOWED_KEYWORDS):
                 continue
 
             markets.append(m)
