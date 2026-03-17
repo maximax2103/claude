@@ -88,15 +88,40 @@
   </div>
 
   <!-- ═══════════════════════════════════════════════════════
+       RESUME SESSION SCREEN
+  ═══════════════════════════════════════════════════════ -->
+  <div id="screen-resume" class="screen">
+    <div class="char-spacer"></div>
+    <div class="panel" id="resume-panel">
+      <h2 class="section-title">Незавершённая сессия</h2>
+      <p class="section-sub">Алиша помнит, где ты остановился 💙</p>
+      <div class="resume-progress-box">
+        <span class="resume-icon">📝</span>
+        <div>
+          <div style="font-size:13px;color:var(--text3);margin-bottom:2px">Пройдено вопросов</div>
+          <div id="resume-progress" style="font-size:20px;font-weight:700;color:var(--purple)">— / —</div>
+        </div>
+      </div>
+      <button class="btn btn-primary" style="margin-bottom:12px" onclick="App._resumeSession(App._loadPausedSession())">Продолжить →</button>
+      <button class="btn btn-secondary" onclick="App._beginNewSession()">Начать заново</button>
+    </div>
+  </div>
+
+  <!-- ═══════════════════════════════════════════════════════
        QUESTION SCREEN
   ═══════════════════════════════════════════════════════ -->
   <div id="screen-question" class="screen">
     <div class="char-spacer"></div>
     <div class="panel">
-      <div class="q-progress">
-        <div class="q-progress-fill" id="q-progress-fill" style="width:0%"></div>
+      <div class="q-header">
+        <div style="flex:1">
+          <div class="q-progress">
+            <div class="q-progress-fill" id="q-progress-fill" style="width:0%"></div>
+          </div>
+          <div class="q-counter" id="q-counter">1 / 30</div>
+        </div>
+        <button class="q-pause-btn" onclick="App.pauseSession()" title="Пауза">⏸</button>
       </div>
-      <div class="q-counter" id="q-counter">1 / 30</div>
       <p class="q-text" id="q-text">...</p>
       <div id="answer-container" class="answer-container"></div>
     </div>

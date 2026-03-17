@@ -107,13 +107,30 @@ body {
   top: 0;
   left: 0;
   right: 0;
-  height: 56vw;
-  max-height: 270px;
+  height: 58vw;
+  max-height: 280px;
   z-index: 20;
   pointer-events: none;
   display: flex;
   align-items: center;
   justify-content: center;
+  background: linear-gradient(180deg,
+    #12080e 0%,
+    #1a0c12 45%,
+    rgba(10,6,18,0.97) 100%
+  );
+  overflow: hidden;
+}
+/* subtle vignette sides */
+#char-stage::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background:
+    radial-gradient(ellipse at 50% 0%, rgba(180,28,34,0.12) 0%, transparent 65%),
+    linear-gradient(90deg, rgba(0,0,0,0.45) 0%, transparent 30%, transparent 70%, rgba(0,0,0,0.45) 100%);
+  pointer-events: none;
+  z-index: 1;
 }
 
 @media (min-width: 600px) {
@@ -121,8 +138,8 @@ body {
     width: 430px;
     left: 50%;
     transform: translateX(-50%);
-    height: 270px;
-    max-height: 270px;
+    height: 280px;
+    max-height: 280px;
   }
 }
 
@@ -132,337 +149,142 @@ body {
   display: flex;
   align-items: center;
   justify-content: center;
+  position: relative;
+  z-index: 2;
 }
 
 .char-spacer {
   flex-shrink: 0;
-  height: 56vw;
-  max-height: 270px;
+  height: 58vw;
+  max-height: 280px;
 }
 @media (min-width: 600px) {
-  .char-spacer { height: 270px; max-height: 270px; }
+  .char-spacer { height: 280px; max-height: 280px; }
 }
 
 #screen-dashboard .char-spacer,
 #screen-achievements .char-spacer { display: none; }
+#screen-tips .char-spacer          { display: none; }
 
-/* ─── ALISHA SPIRIT CHARACTER ───────────────────────────────────────────── */
-.alisha-spirit {
-  position: relative;
-  width: 140px;
-  height: 140px;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  animation: spirit-float 3.6s ease-in-out infinite;
-}
-
-@keyframes spirit-float {
-  0%,100% { transform: translateY(0px) rotate(0deg); }
-  33%      { transform: translateY(-10px) rotate(1deg); }
-  66%      { transform: translateY(-5px) rotate(-0.8deg); }
-}
-
-/* Aura rings */
-.spirit-aura {
-  position: absolute;
-  border-radius: 50%;
-  border: 1.5px solid rgba(167,139,250,0.25);
-  animation: aura-pulse 3s ease-in-out infinite;
-}
-.spirit-aura.a1 { width: 130px; height: 130px; animation-delay: 0s; }
-.spirit-aura.a2 { width: 154px; height: 154px; animation-delay: 0.5s; border-color: rgba(167,139,250,0.14); }
-.spirit-aura.a3 { width: 178px; height: 178px; animation-delay: 1s; border-color: rgba(167,139,250,0.07); }
-
-@keyframes aura-pulse {
-  0%,100% { transform: scale(1); opacity: 1; }
-  50%      { transform: scale(1.06); opacity: 0.5; }
-}
-
-/* Main orb */
-.spirit-orb {
-  width: 110px;
-  height: 110px;
-  border-radius: 50%;
-  background: radial-gradient(circle at 38% 32%,
-    rgba(220,210,255,0.95) 0%,
-    rgba(167,139,250,0.88) 35%,
-    rgba(124,92,191,0.92) 65%,
-    rgba(80,50,150,0.85) 100%
-  );
-  box-shadow:
-    0 0 0 1px rgba(167,139,250,0.4),
-    0 0 30px rgba(167,139,250,0.55),
-    0 0 60px rgba(167,139,250,0.3),
-    0 0 100px rgba(140,100,255,0.15),
-    inset 0 2px 8px rgba(255,255,255,0.35),
-    inset 0 -4px 12px rgba(80,40,140,0.4);
+/* ─── ALISHA ANIME CHARACTER ─────────────────────────────────────────────── */
+.alisha-anime {
   position: relative;
   display: flex;
   align-items: center;
   justify-content: center;
-  overflow: visible;
+  animation: anime-float 4s ease-in-out infinite;
 }
 
-/* Inner glow overlay */
-.spirit-glow {
+.alisha-svg {
+  height: 226px;
+  width: auto;
+  filter:
+    drop-shadow(0 6px 20px rgba(180, 30, 40, 0.35))
+    drop-shadow(0 0 50px rgba(220, 60, 60, 0.14));
+}
+
+/* ─── ANIME CHARACTER STATES & ANIMATIONS ────────────────────────────────── */
+@keyframes anime-float {
+  0%,100% { transform: translateY(0px); }
+  38%     { transform: translateY(-7px); }
+  70%     { transform: translateY(-3px); }
+}
+
+.alisha-anime.state-speaking { animation: anime-speak 0.55s ease-in-out infinite alternate; }
+@keyframes anime-speak {
+  from { transform: translateY(0) scale(1); }
+  to   { transform: translateY(-5px) scale(1.01); }
+}
+
+.alisha-anime.state-happy { animation: anime-happy 0.45s ease-in-out infinite alternate; }
+@keyframes anime-happy {
+  from { transform: translateY(0) scale(1); }
+  to   { transform: translateY(-12px) scale(1.04); }
+}
+
+.alisha-anime.state-thinking { animation: anime-think 2.4s ease-in-out infinite; }
+@keyframes anime-think {
+  0%,100% { transform: translateY(0) rotate(0deg); }
+  40%     { transform: translateY(-5px) rotate(-2.5deg); }
+  70%     { transform: translateY(-3px) rotate(1.5deg); }
+}
+
+.alisha-anime.state-waving { animation: anime-wave 0.5s ease-in-out infinite alternate; }
+@keyframes anime-wave {
+  from { transform: translateY(0) rotate(-2deg); }
+  to   { transform: translateY(-11px) rotate(3deg); }
+}
+
+/* Sparkles */
+.anime-sparkles { position: absolute; inset: 0; pointer-events: none; }
+.sparkle-item {
   position: absolute;
-  inset: 0;
-  border-radius: 50%;
-  background: radial-gradient(circle at 40% 30%,
-    rgba(255,255,255,0.22) 0%,
-    transparent 55%
-  );
-  pointer-events: none;
+  font-size: 13px;
+  animation: sparkle-rise 1.1s ease-out forwards;
+  opacity: 0;
+}
+@keyframes sparkle-rise {
+  0%   { opacity: 1; transform: translateY(0) scale(0.5); }
+  60%  { opacity: 1; transform: translateY(-28px) scale(1.2); }
+  100% { opacity: 0; transform: translateY(-48px) scale(0.8); }
 }
 
-/* Face */
-.spirit-face {
-  position: relative;
-  z-index: 2;
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  gap: 7px;
-  margin-top: 4px;
-}
-
-/* Eyes */
-.spirit-eyes {
-  display: flex;
-  gap: 20px;
-  align-items: center;
-}
-.spirit-eye {
-  width: 14px;
-  height: 16px;
-  background: #1a0830;
-  border-radius: 50% 50% 45% 45%;
-  position: relative;
-  transition: transform 0.12s ease;
-}
-.spirit-eye.blink {
-  transform: scaleY(0.08);
-}
-.eye-pupil {
-  position: absolute;
-  width: 8px; height: 9px;
-  background: #2e1060;
-  border-radius: 50%;
-  bottom: 1px;
-  left: 50%;
-  transform: translateX(-50%);
-}
-.eye-shine {
-  position: absolute;
-  width: 4px; height: 4px;
-  background: rgba(255,255,255,0.9);
-  border-radius: 50%;
-  top: 2px;
-  right: 2px;
-}
-
-/* Mouth */
-.spirit-mouth {
-  width: 22px;
-  height: 10px;
-  border: 2.5px solid #1a0830;
-  border-top: none;
-  border-radius: 0 0 22px 22px;
-  transition: all 0.3s cubic-bezier(0.4,0,0.2,1);
-}
-
-/* Blush */
-.spirit-blush {
-  position: absolute;
-  width: 20px; height: 9px;
-  background: rgba(255,150,180,0.55);
-  border-radius: 50%;
-  filter: blur(3px);
-  top: 58px;
-  transition: opacity 0.3s;
-}
-.blush-l { left: 12px; }
-.blush-r { right: 12px; }
-
-/* ─── STATE ANIMATIONS ───────────────────────────────────────────────────── */
-
-/* speaking */
-.state-speaking .spirit-orb {
-  animation: orb-speak 0.22s ease-in-out infinite alternate;
-}
-.state-speaking .spirit-mouth {
-  animation: mouth-talk 0.28s ease-in-out infinite alternate;
-  border-radius: 0 0 16px 16px;
-  width: 18px;
-  height: 8px;
-}
-@keyframes orb-speak {
-  from { transform: scale(1); }
-  to   { transform: scale(1.025); }
-}
-@keyframes mouth-talk {
-  from { height: 5px; border-radius: 0 0 10px 10px; }
-  to   { height: 11px; border-radius: 0 0 22px 22px; }
-}
-
-/* happy */
-.state-happy .alisha-spirit,
-.alisha-spirit.state-happy {
-  animation: spirit-happy 0.45s ease-in-out infinite alternate;
-}
-.state-happy .spirit-orb,
-.alisha-spirit.state-happy .spirit-orb {
-  box-shadow:
-    0 0 0 1px rgba(167,139,250,0.5),
-    0 0 40px rgba(167,139,250,0.7),
-    0 0 80px rgba(167,139,250,0.45),
-    0 0 120px rgba(244,114,182,0.2),
-    inset 0 2px 8px rgba(255,255,255,0.4),
-    inset 0 -4px 12px rgba(80,40,140,0.35);
-}
-.state-happy .spirit-mouth,
-.alisha-spirit.state-happy .spirit-mouth {
-  width: 28px;
-  height: 14px;
-  border-radius: 0 0 28px 28px;
-  border-color: #1a0830;
-}
-.state-happy .spirit-blush,
-.alisha-spirit.state-happy .spirit-blush {
-  background: rgba(255,130,170,0.75);
-  width: 24px;
-}
-@keyframes spirit-happy {
-  from { transform: translateY(0px) scale(1); }
-  to   { transform: translateY(-14px) scale(1.04); }
-}
-
-/* excited */
-.alisha-spirit.state-excited {
-  animation: spirit-excited 0.32s ease-in-out infinite alternate;
-}
-.alisha-spirit.state-excited .spirit-mouth {
-  width: 32px; height: 16px;
-  border-radius: 0 0 32px 32px;
-}
-.alisha-spirit.state-excited .spirit-blush {
-  background: rgba(255,100,160,0.9);
-  width: 26px; height: 12px;
-}
-.alisha-spirit.state-excited .spirit-aura {
-  animation: aura-excited 0.4s ease-in-out infinite alternate;
-}
-@keyframes spirit-excited {
-  from { transform: translateY(0) rotate(-3deg) scale(1); }
-  to   { transform: translateY(-18px) rotate(3deg) scale(1.06); }
-}
-@keyframes aura-excited {
-  from { opacity: 0.6; transform: scale(1); }
-  to   { opacity: 1; transform: scale(1.12); border-color: rgba(244,114,182,0.45); }
-}
-
-/* thinking */
-.alisha-spirit.state-thinking {
-  animation: spirit-think 2s ease-in-out infinite;
-}
-.alisha-spirit.state-thinking .spirit-mouth {
-  width: 14px; height: 6px;
-  border-radius: 0 0 14px 14px;
-  opacity: 0.7;
-}
-.alisha-spirit.state-thinking .spirit-blush {
-  opacity: 0.3;
-}
-.alisha-spirit.state-thinking .spirit-orb {
-  background: radial-gradient(circle at 38% 32%,
-    rgba(200,210,255,0.9) 0%,
-    rgba(130,150,250,0.85) 35%,
-    rgba(90,100,210,0.9) 65%,
-    rgba(50,60,160,0.85) 100%
-  );
-}
-@keyframes spirit-think {
-  0%,100% { transform: translateY(0) rotate(-4deg); }
-  50%     { transform: translateY(-6px) rotate(4deg); }
-}
-
-/* waving */
-.alisha-spirit.state-waving .spirit-mouth {
-  width: 24px; height: 11px;
-  border-radius: 0 0 24px 24px;
-}
-
-/* ─── PARTICLES ──────────────────────────────────────────────────────────── */
-.spirit-particles {
-  position: absolute;
-  width: 160px; height: 160px;
-  pointer-events: none;
-}
-.spirit-particles span {
-  position: absolute;
-  color: rgba(167,139,250,0.7);
-  font-size: 10px;
-  animation: particle-orbit linear infinite;
-}
-.p1 { animation-duration: 4.5s; animation-delay: 0s;    top: 10%; left: 12%; }
-.p2 { animation-duration: 5.2s; animation-delay: 0.8s;  top: 20%; right: 8%; font-size: 8px; color: rgba(244,114,182,0.7); }
-.p3 { animation-duration: 6.1s; animation-delay: 1.6s;  bottom: 15%; left: 18%; font-size: 8px; }
-.p4 { animation-duration: 4.8s; animation-delay: 2.4s;  bottom: 10%; right: 14%; color: rgba(96,165,250,0.7); }
-.p5 { animation-duration: 5.6s; animation-delay: 3.2s;  top: 50%; left: 4%; font-size: 7px; }
-
-@keyframes particle-orbit {
-  0%,100% { transform: translateY(0) scale(1); opacity: 0.7; }
-  25%      { transform: translateY(-8px) translateX(4px) scale(1.2); opacity: 1; }
-  50%      { transform: translateY(-4px) translateX(-4px) scale(0.85); opacity: 0.5; }
-  75%      { transform: translateY(6px) translateX(2px) scale(1.1); opacity: 0.9; }
-}
-
-/* ─── SPEECH BUBBLE ──────────────────────────────────────────────────────── */
+/* ─── VN-STYLE DIALOGUE BOX ──────────────────────────────────────────────── */
+/* Positioned at the bottom of char-stage — feels integrated, not floating */
 .speech-bubble {
   position: absolute;
-  top: 10px;
-  left: 50%;
-  transform: translateX(-50%) translateY(-10px);
-  width: calc(100% - 24px);
-  max-width: 360px;
-  background: rgba(15, 12, 35, 0.92);
-  backdrop-filter: blur(20px);
-  -webkit-backdrop-filter: blur(20px);
-  border: 1px solid rgba(167,139,250,0.3);
-  border-radius: 18px;
-  padding: 14px 40px 14px 18px;
+  bottom: 0;
+  left: 0;
+  right: 0;
+  width: 100%;
+  background: rgba(6, 4, 18, 0.93);
+  backdrop-filter: blur(18px);
+  -webkit-backdrop-filter: blur(18px);
+  border-top: 1px solid rgba(220, 50, 50, 0.22);
+  border-radius: 0;
+  padding: 10px 44px 12px 16px;
   font-size: 13.5px;
-  line-height: 1.6;
+  line-height: 1.62;
   color: var(--text);
-  box-shadow: 0 8px 32px rgba(0,0,0,0.6), 0 0 40px rgba(167,139,250,0.12);
   opacity: 0;
-  transition: opacity 0.38s ease, transform 0.38s ease;
+  transform: translateY(6px);
+  transition: opacity 0.34s ease, transform 0.34s ease;
   pointer-events: none;
   z-index: 30;
 }
+.speech-bubble::before {
+  content: 'Алиша';
+  display: block;
+  font-size: 11px;
+  font-weight: 700;
+  color: #E84040;
+  text-transform: uppercase;
+  letter-spacing: 0.6px;
+  margin-bottom: 4px;
+}
 .speech-bubble.visible {
   opacity: 1;
-  transform: translateX(-50%) translateY(0);
+  transform: translateY(0);
   pointer-events: auto;
 }
 
-/* Close button in bubble */
+/* Close button in dialogue box */
 .bubble-close {
   position: absolute;
-  top: 10px; right: 12px;
-  width: 22px; height: 22px;
-  background: rgba(255,255,255,0.1);
+  top: 8px; right: 10px;
+  width: 24px; height: 24px;
+  background: rgba(255,255,255,0.07);
   border: none;
   border-radius: 50%;
   color: var(--text3);
   font-size: 11px;
   cursor: pointer;
+  pointer-events: auto;
   display: flex; align-items: center; justify-content: center;
   transition: background 0.2s, color 0.2s;
   line-height: 1;
 }
-.bubble-close:hover { background: rgba(255,255,255,0.18); color: var(--text); }
+.bubble-close:hover { background: rgba(255,255,255,0.16); color: var(--text); }
 
 /* ─── BOTTOM CONTENT PANEL ───────────────────────────────────────────────── */
 .panel {
@@ -535,10 +357,41 @@ body {
 .intro-item-icon { font-size: 20px; flex-shrink: 0; margin-top: 1px; }
 .intro-item-text { font-size: 13.5px; color: var(--text2); line-height: 1.45; }
 
+/* ─── RESUME SCREEN ──────────────────────────────────────────────────────── */
+#screen-resume {
+  background: radial-gradient(ellipse at 50% 0%, #1a1040 0%, var(--bg-solid) 60%);
+}
+.resume-progress-box {
+  display: flex; align-items: center; gap: 16px;
+  background: var(--card);
+  border: 1px solid rgba(167,139,250,0.2);
+  border-radius: var(--radius-sm);
+  padding: 18px 20px;
+  margin: 20px 0 24px;
+}
+.resume-icon { font-size: 32px; }
+
 /* ─── QUESTION SCREEN ────────────────────────────────────────────────────── */
 #screen-question {
   background: radial-gradient(ellipse at 50% 0%, #1a1645 0%, var(--bg-solid) 60%);
 }
+.q-header {
+  display: flex; align-items: flex-start; gap: 10px; margin-bottom: 0;
+}
+.q-pause-btn {
+  flex-shrink: 0;
+  width: 34px; height: 34px;
+  background: var(--card);
+  border: 1px solid var(--border);
+  border-radius: 10px;
+  color: var(--text3);
+  font-size: 16px;
+  cursor: pointer;
+  display: flex; align-items: center; justify-content: center;
+  transition: background 0.2s, color 0.2s, border-color 0.2s;
+  margin-top: 2px;
+}
+.q-pause-btn:hover { background: var(--card-hover); color: var(--text2); border-color: var(--border2); }
 .q-progress {
   height: 3px;
   background: rgba(255,255,255,0.07);
@@ -553,9 +406,10 @@ body {
   transition: width 0.5s cubic-bezier(0.4,0,0.2,1);
 }
 .q-counter {
-  font-size: 11.5px;
+  font-size: 11px;
   color: var(--text3);
   text-align: right;
+  margin-top: 5px;
   margin-bottom: 14px;
   letter-spacing: 0.3px;
 }

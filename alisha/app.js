@@ -90,12 +90,23 @@ const App = {
   // ─── SESSION INTRO ────────────────────────────────────────────────────────
   async startSession() {
     TG.haptic('medium');
-    // Select 30 questions
+
+    // Check for saved (paused) session
+    const saved = this._loadPausedSession();
+    if (saved && saved.answers.length > 0) {
+      this._showResumePrompt(saved);
+      return;
+    }
+
+    await this._beginNewSession();
+  },
+
+  async _beginNewSession() {
+    this._clearPausedSession();
     this.sessionQuestions = selectSessionQuestions(30, this.previousQuestionIds);
     this.sessionAnswers = [];
     this.currentQIndex = 0;
 
-    // Start session in DB
     try {
       this.session = await DB.startSession(this.user?.id);
     } catch {
@@ -103,6 +114,66 @@ const App = {
     }
 
     this._showQuestion();
+  },
+
+  // ─── RESUME PROMPT ────────────────────────────────────────────────────────
+  _showResumePrompt(saved) {
+    const done = saved.answers.length;
+    const total = saved.questions.length;
+    const name = this.user?.display_name || 'Друг';
+
+    this._speak(`${name}, у тебя есть незавершённая сессия — вопрос ${done + 1} из ${total}.\n\nПродолжить или начать заново?`, 0);
+    if (this.character) this.character.showThinking();
+
+    // Build resume screen content
+    const panel = document.getElementById('resume-panel');
+    if (panel) {
+      document.getElementById('resume-progress').textContent = `${done} / ${total} вопросов`;
+      this.showScreen('screen-resume');
+      return;
+    }
+
+    // Fallback: inline in home screen (if resume screen not in HTML)
+    const ok = confirm(`Продолжить сессию с вопроса ${done + 1}/${total}?\n(Отмена = начать заново)`);
+    if (ok) {
+      this._resumeSession(saved);
+    } else {
+      this._beginNewSession();
+    }
+  },
+
+  _resumeSession(saved) {
+    this.session          = saved.session;
+    this.sessionQuestions = saved.questions;
+    this.sessionAnswers   = saved.answers;
+    this.currentQIndex    = saved.answers.length;
+    this._showQuestion();
+  },
+
+  // ─── PAUSE / SAVE ─────────────────────────────────────────────────────────
+  _savePausedSession() {
+    if (!this.sessionQuestions?.length || this.currentQIndex === 0) return;
+    localStorage.setItem('alisha_paused_session', JSON.stringify({
+      session:   this.session,
+      questions: this.sessionQuestions,
+      answers:   this.sessionAnswers,
+      savedAt:   Date.now()
+    }));
+  },
+
+  _loadPausedSession() {
+    try {
+      const raw = localStorage.getItem('alisha_paused_session');
+      if (!raw) return null;
+      const data = JSON.parse(raw);
+      // Expire after 24h
+      if (Date.now() - data.savedAt > 86400000) { this._clearPausedSession(); return null; }
+      return data;
+    } catch { return null; }
+  },
+
+  _clearPausedSession() {
+    localStorage.removeItem('alisha_paused_session');
   },
 
   // ─── QUESTION FLOW ────────────────────────────────────────────────────────
@@ -226,6 +297,13 @@ const App = {
     const score = (q.scores || [])[idx] ?? 5;
     const text = (q.options || [])[idx] || '';
     this._recordAnswer(score, text);
+  },
+
+  pauseSession() {
+    if (this.screen === 'screen-question' && this.sessionQuestions?.length) {
+      this._savePausedSession();
+    }
+    this.showHome();
   },
 
   _recordAnswer(numericVal, textVal = null) {
