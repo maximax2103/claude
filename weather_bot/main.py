@@ -122,4 +122,7 @@ async def main() -> int:
 
 
 if __name__ == "__main__":
+    # Fix asyncio event loop on Windows
+    if sys.platform == "win32":
+        asyncio.set_event_loop_policy(asyncio.WindowsSelectorEventLoopPolicy())
     sys.exit(asyncio.run(main()))
