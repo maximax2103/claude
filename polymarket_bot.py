@@ -33,7 +33,7 @@ TELEGRAM_CHAT_ID = os.getenv("TELEGRAM_CHAT_ID", "482744886")
 GAMMA_API = "https://gamma-api.polymarket.com"
 CLOB_API = "https://clob.polymarket.com"
 
-MIN_VOLUME = 50_000        # минимальный объём рынка в $
+MIN_VOLUME = 200_000       # минимальный объём рынка в $
 PRICE_CHANGE_PCT = 10.0    # порог изменения цены в %
 WINDOW_MINUTES = 10        # окно наблюдения в минутах
 POLL_INTERVAL = 60         # интервал опроса в секундах
@@ -152,14 +152,19 @@ def check_price_spike(token_id: str, current_price: float) -> float | None:
     now = time.time()
     window_start = now - WINDOW_MINUTES * 60
 
-    # Найти самую раннюю цену в окне наблюдения
+    # Найти самую раннюю цену строго в пределах окна (не старше WINDOW_MINUTES минут)
     baseline_price = None
+    baseline_ts = None
     for ts, price in history:
         if ts >= window_start:
             baseline_price = price
+            baseline_ts = ts
             break
 
+    # Если нет данных в окне или baseline слишком старый — не считаем
     if baseline_price is None or baseline_price == 0:
+        return None
+    if now - baseline_ts > WINDOW_MINUTES * 60:
         return None
 
     change_pct = (current_price - baseline_price) / baseline_price * 100
