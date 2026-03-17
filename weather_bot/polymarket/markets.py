@@ -134,6 +134,14 @@ def _build_queries(city_key: str, target_date: date) -> list[str]:
         queries.append(f"{slug} temperature {month_name} {day}")
         queries.append(f"{slug} high temperature {year}")
         queries.append(f"{slug} weather {month_name}")
+        queries.append(f"{slug} temperature")
+        queries.append(f"{slug} degrees")
+        queries.append(f"{slug} high {month_name} {day}")
+
+    # Broad fallback queries
+    queries.append("temperature weather")
+    queries.append(f"high temperature {month_name}")
+    queries.append("weather forecast market")
 
     return queries
 
@@ -167,6 +175,11 @@ async def discover_markets(
                 if mid and mid not in seen_ids:
                     seen_ids.add(mid)
                     raw_markets.append(m)
+
+    logger.info(
+        "City=%s Date=%s → %d raw markets from %d queries",
+        city_key, target_date, len(raw_markets), len(queries),
+    )
 
     # Parse and filter
     enriched = []

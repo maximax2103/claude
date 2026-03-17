@@ -28,7 +28,7 @@ CITIES: dict = {
     },
     "miami": {
         "lat": 25.7617, "lon": -80.1918,
-        "nws_station": "KMIA", "nws_office": "MFL", "nws_grid": "110,42",
+        "nws_station": "KMIA", "nws_office": "MFL", "nws_grid": "75,54",
         "display": "Miami",
         "polymarket_slug_names": ["miami"],
     },
