@@ -56,7 +56,8 @@ const App = {
   // ─── WELCOME ──────────────────────────────────────────────────────────────
   async showWelcome() {
     this.showScreen('screen-welcome');
-    this._speak('Привет! Я Алиша 👋\nТвой личный психолог и друг.\n\nКак мне тебя называть?', 3000);
+    this._speak('Привет! Я Алиша 👋\nТвой личный психолог и друг.\n\nКак мне тебя называть?', 4000);
+    if (this.character) this.character.showWaving();
     setTimeout(() => {
       this.showScreen('screen-name');
       if (this.character) this.character.setState('idle');
@@ -312,7 +313,14 @@ const App = {
     document.getElementById('popup-name').textContent = achievement.name;
     popup.classList.add('visible');
     TG.haptic('heavy');
-    setTimeout(() => popup.classList.remove('visible'), 4000);
+    clearTimeout(this._popupTimer);
+    this._popupTimer = setTimeout(() => popup.classList.remove('visible'), 5000);
+  },
+
+  closeAchievementPopup() {
+    const popup = document.getElementById('achievement-popup');
+    if (popup) popup.classList.remove('visible');
+    clearTimeout(this._popupTimer);
   },
 
   // ─── HOME / DASHBOARD ─────────────────────────────────────────────────────
@@ -399,15 +407,20 @@ const App = {
 
     if (this.character) this.character.startSpeaking();
 
-    if (clearAfter > 0) {
-      clearTimeout(this._speakTimer);
-      this._speakTimer = setTimeout(() => {
-        bubble.classList.remove('visible');
-        if (this.character) this.character.stopSpeaking();
-      }, clearAfter);
-    } else {
-      if (this.character) setTimeout(() => this.character.stopSpeaking(), 2500);
-    }
+    // Auto-dismiss: use clearAfter if set, otherwise default 9 seconds
+    const timeout = clearAfter > 0 ? clearAfter : 9000;
+    clearTimeout(this._speakTimer);
+    this._speakTimer = setTimeout(() => {
+      bubble.classList.remove('visible');
+      if (this.character) this.character.stopSpeaking();
+    }, timeout);
+  },
+
+  closeBubble() {
+    const bubble = document.getElementById('speech-bubble');
+    if (bubble) bubble.classList.remove('visible');
+    clearTimeout(this._speakTimer);
+    if (this.character) this.character.stopSpeaking();
   },
 
   _shake(el) {

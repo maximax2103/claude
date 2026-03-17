@@ -330,6 +330,38 @@ async def check_achievements(req: CheckAchievementsRequest):
     return newly_earned
 
 
+# ─── ADMIN: USERS LIST ────────────────────────────────────────────────────────
+@app.get("/api/admin/users")
+async def admin_list_users(limit: int = 100, offset: int = 0):
+    """List all users with their IDs, names, Telegram info and session counts.
+    Protected: only works if SUPABASE_SERVICE_KEY is set."""
+    if not SUPABASE_KEY:
+        raise HTTPException(403, "Service key required")
+    users = await sb_get("/users", {
+        "select": "id,telegram_id,username,display_name,created_at",
+        "order": "created_at.desc",
+        "limit": str(limit),
+        "offset": str(offset),
+    })
+    # Attach session count per user
+    result = []
+    for u in (users or []):
+        sessions = await sb_get("/sessions", {
+            "user_id": f"eq.{u['id']}",
+            "completed_at": "not.is.null",
+            "select": "id",
+        })
+        result.append({
+            "id":           u["id"],
+            "telegram_id":  u.get("telegram_id"),
+            "username":     u.get("username"),
+            "display_name": u.get("display_name"),
+            "sessions":     len(sessions or []),
+            "joined":       u.get("created_at", "")[:10],
+        })
+    return result
+
+
 # ─── SERVE STATIC FILES ───────────────────────────────────────────────────────
 if os.path.isdir("alisha"):
     app.mount("/", StaticFiles(directory="alisha", html=True), name="static")
