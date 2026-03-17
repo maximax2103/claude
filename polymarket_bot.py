@@ -7,6 +7,7 @@ Polymarket Price Alert Bot
 import asyncio
 import json
 import logging
+import re
 import os
 import time
 from collections import defaultdict, deque
@@ -153,7 +154,8 @@ def format_alert(market: dict, token: dict, change_pct: float, current_price: fl
     question = market.get("question", "Неизвестный рынок")
     volume = float(market.get("volume", 0) or 0)
     slug = market.get("slug") or market.get("id", "")
-    url = f"https://polymarket.com/event/{slug}"
+    slug_clean = re.sub(r'-\d+$', '', slug)
+    url = f"https://polymarket.com/event/{slug_clean}"
 
     sign = "+" if change_pct > 0 else ""
 
