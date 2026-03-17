@@ -39,6 +39,15 @@ WINDOW_MINUTES = 10        # окно наблюдения в минутах
 POLL_INTERVAL = 60         # интервал опроса в секундах
 MARKETS_LIMIT = 100        # сколько топ-рынков загружать за раз
 
+# Разрешённые категории (теги рынков на Polymarket)
+ALLOWED_TAGS = {
+    "politics", "sports", "crypto", "iran", "geopolitics", "tech", "weather",
+}
+
+# Рынки которые слишком часто триггерят алерты — блокируем на сессию
+noisy_markets: dict[str, int] = {}  # market_id -> кол-во алертов
+NOISY_THRESHOLD = 5  # больше N алертов = шумный рынок
+
 # ── Хранилище истории цен ─────────────────────────────────────────────────────
 # price_history[token_id] = deque of (timestamp, price)
 price_history: dict[str, deque] = defaultdict(lambda: deque(maxlen=WINDOW_MINUTES + 2))
@@ -87,8 +96,22 @@ async def fetch_active_markets(client: httpx.AsyncClient) -> list[dict]:
                 vol = 0
 
             if vol < MIN_VOLUME:
-                # Рынки отсортированы по убыванию объёма — дальше только меньше
                 return markets
+
+            # Фильтр по категориям через теги
+            tags_raw = m.get("tags") or []
+            if isinstance(tags_raw, str):
+                try:
+                    tags_raw = json.loads(tags_raw)
+                except Exception:
+                    tags_raw = []
+            market_tags = {
+                (t.get("slug") or t.get("label") or "").lower()
+                for t in tags_raw
+                if isinstance(t, dict)
+            }
+            if not market_tags.intersection(ALLOWED_TAGS):
+                continue
 
             markets.append(m)
 
@@ -239,6 +262,14 @@ async def monitor_loop(bot: Bot):
 
                         last_alert[token_id] = now
                         market = token_to_market[token_id]
+                        market_id = market.get("id", "")
+
+                        # Пропускаем шумные рынки
+                        noisy_markets[market_id] = noisy_markets.get(market_id, 0) + 1
+                        if noisy_markets[market_id] > NOISY_THRESHOLD:
+                            log.info("Шумный рынок пропущен: %s (%d алертов)", market.get("question", "?")[:50], noisy_markets[market_id])
+                            continue
+
                         token_info = token_to_info[token_id]
                         text = format_alert(market, token_info, change_pct, price)
 
