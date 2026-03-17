@@ -11,9 +11,9 @@ An automated trading bot that forecasts daily high temperatures using a multi-mo
 | Probability estimation | Binary match | P(temp ∈ range) via Normal CDF |
 | Position sizing | Fixed 5% | Fractional Kelly (¼ Kelly with hard cap) |
 | Exit logic | Static threshold | Dynamic: tightens as resolution approaches |
-| Cities | 6 | 10 (+ easy to add more) |
+| Cities | 6 | 6 (easy to add more) |
 | State storage | JSON | SQLite (atomic, crash-safe) |
-| Backtesting | ❌ | ✅ Uses Open-Meteo historical API |
+| Paper testing | ❌ | ✅ Full paper mode on live markets |
 | Dashboard | ✅ | ✅ Enhanced with city P&L chart |
 | Market discovery | 1 query/city | Multi-query concurrent search |
 
@@ -78,9 +78,6 @@ python main.py --interval 30
 # Live trading (needs POLYMARKET_PRIVATE_KEY in .env)
 python main.py --live --interval 30
 
-# Historical backtest (2024)
-python main.py --backtest --backtest-start 2024-01-01 --backtest-end 2024-06-01
-
 # Show open positions
 python main.py --positions
 
@@ -122,8 +119,6 @@ weather_bot/
 │   └── runner.py           Main trading loop
 ├── db/
 │   └── state.py            SQLite state management
-├── backtest/
-│   └── runner.py           Historical backtesting
 ├── utils/
 │   └── colors.py           Terminal colors
 └── dashboard/

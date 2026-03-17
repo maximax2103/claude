@@ -7,7 +7,6 @@ Usage:
   python main.py --live --interval 30         # Live trading every 30 min
   python main.py --positions                  # Show open positions
   python main.py --reset                      # Reset paper simulation
-  python main.py --backtest                   # Run historical backtest
   python main.py --export                     # Export state to simulation.json (for dashboard)
   python main.py --stats                      # Print trading statistics
 """
@@ -16,7 +15,6 @@ import argparse
 import asyncio
 import logging
 import sys
-from datetime import date
 
 from config import load_config
 from db.state import StateDB
@@ -54,12 +52,6 @@ async def main() -> int:
                         help="Show trading statistics and exit")
     parser.add_argument("--export", action="store_true",
                         help="Export simulation.json for dashboard and exit")
-    parser.add_argument("--backtest", action="store_true",
-                        help="Run historical backtest")
-    parser.add_argument("--backtest-start", default="2024-01-01",
-                        help="Backtest start date (YYYY-MM-DD)")
-    parser.add_argument("--backtest-end", default="2024-06-01",
-                        help="Backtest end date (YYYY-MM-DD)")
     parser.add_argument("--balance", type=float, default=None,
                         help="Starting balance for --reset (default: 1000)")
     parser.add_argument("-v", "--verbose", action="store_true",
@@ -97,13 +89,6 @@ async def main() -> int:
     if args.export:
         db.export_json()
         info("Exported to simulation.json")
-        return 0
-
-    if args.backtest:
-        from backtest.runner import run_backtest
-        start = date.fromisoformat(args.backtest_start)
-        end = date.fromisoformat(args.backtest_end)
-        await run_backtest(config, start, end)
         return 0
 
     # ── Live/Paper trading ────────────────────────────────────────────────────
