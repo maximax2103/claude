@@ -135,13 +135,7 @@ def _build_queries(city_key: str, target_date: date) -> list[str]:
         queries.append(f"{slug} high temperature {year}")
         queries.append(f"{slug} weather {month_name}")
         queries.append(f"{slug} temperature")
-        queries.append(f"{slug} degrees")
-        queries.append(f"{slug} high {month_name} {day}")
-
-    # Broad fallback queries
-    queries.append("temperature weather")
-    queries.append(f"high temperature {month_name}")
-    queries.append("weather forecast market")
+        queries.append(f"{slug} degrees {month_name}")
 
     return queries
 
