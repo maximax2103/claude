@@ -22,9 +22,9 @@ const App = {
     // Load previous question IDs
     this.previousQuestionIds = JSON.parse(localStorage.getItem('alisha_prev_qids') || '[]');
 
-    // Init 3D character
+    // Init character
     const charContainer = document.getElementById('char-canvas');
-    if (charContainer && window.THREE) {
+    if (charContainer) {
       this.character = new AlinaCharacter(charContainer);
     }
 
@@ -430,9 +430,66 @@ const App = {
     TG.haptic('heavy');
   },
 
+  // ─── TIPS SCREEN ──────────────────────────────────────────────────────────
+  async showTips() {
+    const stats = this.stats || (await DB.getUserStats(this.user?.id).catch(() => DB._localStats()));
+    const lastScores = stats.last_scores || stats.sessions?.[0]?.scores;
+    const name = this.user?.display_name || 'Друг';
+
+    const container = document.getElementById('tips-advice-list');
+    const emptyEl = document.getElementById('tips-empty');
+    const dateEl = document.getElementById('tips-last-date');
+    const wellEl = document.getElementById('tips-wellbeing');
+
+    if (!lastScores) {
+      if (emptyEl) emptyEl.style.display = 'block';
+      if (container) container.style.display = 'none';
+      if (dateEl) dateEl.textContent = '';
+      if (wellEl) wellEl.textContent = '';
+    } else {
+      if (emptyEl) emptyEl.style.display = 'none';
+      if (container) container.style.display = 'block';
+
+      // Last session date
+      const lastSession = stats.sessions?.[0];
+      if (dateEl && lastSession?.completed_at) {
+        const d = new Date(lastSession.completed_at);
+        const diff = Math.floor((Date.now() - d.getTime()) / 86400000);
+        dateEl.textContent = diff === 0 ? 'Сегодня' : diff === 1 ? 'Вчера' : `${diff} дней назад`;
+      }
+
+      // Wellbeing score
+      if (wellEl) {
+        wellEl.textContent = lastScores.wellbeing ? `${lastScores.wellbeing}/100` : '';
+      }
+
+      // Generate advice from last scores
+      if (container) {
+        const advice = getAliashaAdvice(lastScores);
+        // Also add dimension insights
+        const dims = Object.entries(lastScores)
+          .filter(([k]) => k !== 'wellbeing')
+          .sort(([, a], [, b]) => a - b);
+
+        container.innerHTML = advice.map(a =>
+          `<div class="advice-item">💙 ${a}</div>`
+        ).join('') + `
+          <div class="tips-divider">Показатели последней сессии</div>
+          <div class="score-cards-grid" id="tips-score-cards"></div>
+        `;
+        renderScoreCards('tips-score-cards', lastScores);
+      }
+
+      this._speak(`${name}, вот рекомендации Алиши 💙\n\nОни основаны на твоей последней сессии. Хочешь пройти новую?`, 0);
+    }
+
+    this.showScreen('screen-tips');
+  },
+
   goToHome() { this.showHome(); },
   goToDashboard() { this.showDashboard(); },
   goToAchievements() { this.showAchievements(); },
+  goToTips() { this.showTips(); },
 };
 
 // Boot

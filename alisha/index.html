@@ -141,7 +141,7 @@
     </div>
     <div class="bottom-nav" id="nav-results">
       <button class="nav-item active" onclick="App.goToHome()"><span class="nav-icon">🏠</span>Главная</button>
-      <button class="nav-item" onclick="App.startSession()"><span class="nav-icon">💬</span>Сессия</button>
+      <button class="nav-item" onclick="App.goToTips()"><span class="nav-icon">💡</span>Советы</button>
       <button class="nav-item" onclick="App.goToDashboard()"><span class="nav-icon">📊</span>Статистика</button>
       <button class="nav-item" onclick="App.goToAchievements()"><span class="nav-icon">🏆</span>Ачивки</button>
     </div>
@@ -191,7 +191,7 @@
     </div>
     <div class="bottom-nav">
       <button class="nav-item active" onclick="App.goToHome()"><span class="nav-icon">🏠</span>Главная</button>
-      <button class="nav-item" onclick="App.startSession()"><span class="nav-icon">💬</span>Сессия</button>
+      <button class="nav-item" onclick="App.goToTips()"><span class="nav-icon">💡</span>Советы</button>
       <button class="nav-item" onclick="App.goToDashboard()"><span class="nav-icon">📊</span>Статистика</button>
       <button class="nav-item" onclick="App.goToAchievements()"><span class="nav-icon">🏆</span>Ачивки</button>
     </div>
@@ -229,7 +229,7 @@
     </div>
     <div class="bottom-nav">
       <button class="nav-item" onclick="App.goToHome()"><span class="nav-icon">🏠</span>Главная</button>
-      <button class="nav-item" onclick="App.startSession()"><span class="nav-icon">💬</span>Сессия</button>
+      <button class="nav-item" onclick="App.goToTips()"><span class="nav-icon">💡</span>Советы</button>
       <button class="nav-item active" onclick="App.goToDashboard()"><span class="nav-icon">📊</span>Статистика</button>
       <button class="nav-item" onclick="App.goToAchievements()"><span class="nav-icon">🏆</span>Ачивки</button>
     </div>
@@ -250,9 +250,54 @@
     <div id="achievements-list" class="achievements-grid" style="padding-bottom:80px"></div>
     <div class="bottom-nav">
       <button class="nav-item" onclick="App.goToHome()"><span class="nav-icon">🏠</span>Главная</button>
-      <button class="nav-item" onclick="App.startSession()"><span class="nav-icon">💬</span>Сессия</button>
+      <button class="nav-item" onclick="App.goToTips()"><span class="nav-icon">💡</span>Советы</button>
       <button class="nav-item" onclick="App.goToDashboard()"><span class="nav-icon">📊</span>Статистика</button>
       <button class="nav-item active" onclick="App.goToAchievements()"><span class="nav-icon">🏆</span>Ачивки</button>
+    </div>
+  </div>
+
+  <!-- ═══════════════════════════════════════════════════════
+       TIPS SCREEN
+  ═══════════════════════════════════════════════════════ -->
+  <div id="screen-tips" class="screen">
+    <div class="dash-header">
+      <h2 class="dash-title">💡 Советы Алиши</h2>
+      <button onclick="App.goToHome()" style="background:none;border:none;color:var(--text2);font-size:22px;cursor:pointer;padding:4px 8px;border-radius:8px;transition:background 0.2s" onmouseover="this.style.background='rgba(255,255,255,0.08)'" onmouseout="this.style.background='none'">✕</button>
+    </div>
+    <div class="dash-scroll" style="padding-bottom:100px">
+      <!-- Session meta -->
+      <div class="tips-meta" id="tips-meta">
+        <div class="tips-meta-item">
+          <span class="tips-meta-label">Последняя сессия</span>
+          <span class="tips-meta-value" id="tips-last-date">—</span>
+        </div>
+        <div class="tips-meta-item">
+          <span class="tips-meta-label">Индекс благополучия</span>
+          <span class="tips-meta-value" id="tips-wellbeing" style="color:var(--purple)">—</span>
+        </div>
+      </div>
+
+      <!-- Empty state -->
+      <div id="tips-empty" style="display:none;text-align:center;color:var(--text2);padding:48px 24px 24px">
+        <p style="font-size:48px;margin-bottom:12px">💡</p>
+        <p style="font-size:15px;font-weight:600;margin-bottom:8px">Советы появятся после сессии</p>
+        <p style="font-size:13px;color:var(--text3);margin-bottom:24px">Пройди первую сессию,<br>чтобы Алиша дала персональные рекомендации</p>
+        <button class="btn btn-primary" onclick="App.startSession()">Начать сессию ✨</button>
+      </div>
+
+      <!-- Advice list -->
+      <div id="tips-advice-list" style="display:none"></div>
+
+      <!-- Start new session button -->
+      <div id="tips-new-btn" style="padding:16px 0 0">
+        <button class="btn btn-secondary" onclick="App.startSession()" style="border-color:rgba(167,139,250,0.3);color:var(--purple)">Пройти новую сессию 💬</button>
+      </div>
+    </div>
+    <div class="bottom-nav">
+      <button class="nav-item" onclick="App.goToHome()"><span class="nav-icon">🏠</span>Главная</button>
+      <button class="nav-item active" onclick="App.goToTips()"><span class="nav-icon">💡</span>Советы</button>
+      <button class="nav-item" onclick="App.goToDashboard()"><span class="nav-icon">📊</span>Статистика</button>
+      <button class="nav-item" onclick="App.goToAchievements()"><span class="nav-icon">🏆</span>Ачивки</button>
     </div>
   </div>
 
