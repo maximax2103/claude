@@ -2,13 +2,13 @@
 Weather Trading Bot for Polymarket — entry point.
 
 Usage:
-  python main.py                              # Paper mode (single run)
-  python main.py --live                       # Live trading (single run)
+  python main.py                              # Paper mode — trade on real Polymarket markets
+  python main.py --sim                        # Simulation — synthetic markets from real forecasts
+  python main.py --sim --interval 60          # Simulation every 60 min (run for a few days)
   python main.py --live --interval 30         # Live trading every 30 min
   python main.py --positions                  # Show open positions
-  python main.py --reset                      # Reset paper simulation
-  python main.py --export                     # Export state to simulation.json (for dashboard)
-  python main.py --stats                      # Print trading statistics
+  python main.py --reset                      # Reset demo account
+  python main.py --stats                      # Show P&L statistics
 """
 
 import argparse
@@ -18,7 +18,6 @@ import sys
 
 from config import load_config
 from db.state import StateDB
-from strategy.runner import TradingRunner
 from utils.colors import bold, info, warn
 
 
@@ -29,7 +28,6 @@ def setup_logging(verbose: bool) -> None:
         format="%(asctime)s [%(levelname)s] %(name)s: %(message)s",
         datefmt="%H:%M:%S",
     )
-    # Quiet noisy libraries
     logging.getLogger("httpx").setLevel(logging.WARNING)
     logging.getLogger("httpcore").setLevel(logging.WARNING)
 
@@ -40,8 +38,10 @@ async def main() -> int:
         formatter_class=argparse.RawDescriptionHelpFormatter,
         epilog=__doc__,
     )
+    parser.add_argument("--sim", action="store_true",
+                        help="Simulation mode: synthetic markets from real forecasts")
     parser.add_argument("--live", action="store_true",
-                        help="Execute real trades (default: paper mode)")
+                        help="Execute real trades on Polymarket")
     parser.add_argument("--interval", type=int, default=0, metavar="MINUTES",
                         help="Repeat every N minutes (0 = run once)")
     parser.add_argument("--reset", action="store_true",
@@ -91,28 +91,38 @@ async def main() -> int:
         info("Exported to simulation.json")
         return 0
 
-    # ── Live/Paper trading ────────────────────────────────────────────────────
+    # ── Select runner ─────────────────────────────────────────────────────────
 
-    if args.live:
+    if args.sim:
+        from strategy.simulation import SimulationRunner
+        runner = SimulationRunner(config, db)
+        info("SIMULATION MODE — synthetic markets, real weather forecasts")
+    elif args.live:
         if not config.polymarket_private_key:
             warn("POLYMARKET_PRIVATE_KEY not set – cannot trade live")
             return 1
         warn("LIVE TRADING MODE – real funds at risk")
+        from strategy.runner import TradingRunner
+        runner = TradingRunner(config, db, live=True)
+    else:
+        from strategy.runner import TradingRunner
+        runner = TradingRunner(config, db, live=False)
+        info("PAPER MODE — scanning real Polymarket markets")
 
-    runner = TradingRunner(config, db, live=args.live)
+    # ── Run loop ──────────────────────────────────────────────────────────────
 
     if args.interval > 0:
-        info(f"Scheduled mode: running every {args.interval} minutes")
+        info(f"Running every {args.interval} minutes. Ctrl+C to stop.")
         run_count = 0
         while True:
             run_count += 1
-            info(f"Run #{run_count}")
+            info(f"─── Run #{run_count} ───")
             try:
                 await runner.run_once()
-                db.export_json()  # refresh dashboard
+                db.export_json()
             except Exception as exc:
                 logging.exception("Run failed: %s", exc)
-            info(f"Sleeping {args.interval} minutes …")
+            info(f"Next run in {args.interval} min …")
             await asyncio.sleep(args.interval * 60)
     else:
         await runner.run_once()
@@ -122,7 +132,6 @@ async def main() -> int:
 
 
 if __name__ == "__main__":
-    # Fix asyncio event loop on Windows
     if sys.platform == "win32":
         asyncio.set_event_loop_policy(asyncio.WindowsSelectorEventLoopPolicy())
     sys.exit(asyncio.run(main()))
