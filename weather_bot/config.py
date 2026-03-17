@@ -50,30 +50,6 @@ CITIES: dict = {
         "display": "Atlanta",
         "polymarket_slug_names": ["atlanta"],
     },
-    "losangeles": {
-        "lat": 34.0522, "lon": -118.2437,
-        "nws_station": "KLAX", "nws_office": "LOX", "nws_grid": "150,48",
-        "display": "Los Angeles",
-        "polymarket_slug_names": ["los angeles", "la", "los-angeles"],
-    },
-    "denver": {
-        "lat": 39.7392, "lon": -104.9903,
-        "nws_station": "KDEN", "nws_office": "BOU", "nws_grid": "57,63",
-        "display": "Denver",
-        "polymarket_slug_names": ["denver"],
-    },
-    "phoenix": {
-        "lat": 33.4484, "lon": -112.0740,
-        "nws_station": "KPHX", "nws_office": "PSR", "nws_grid": "164,55",
-        "display": "Phoenix",
-        "polymarket_slug_names": ["phoenix"],
-    },
-    "boston": {
-        "lat": 42.3601, "lon": -71.0589,
-        "nws_station": "KBOS", "nws_office": "BOX", "nws_grid": "70,82",
-        "display": "Boston",
-        "polymarket_slug_names": ["boston"],
-    },
 }
 
 
@@ -106,7 +82,7 @@ class BotConfig:
     min_sigma_f: float = 2.0
 
     # ── Locations ─────────────────────────────────────────────────────────────
-    locations: str = "nyc,chicago,miami,dallas,seattle,atlanta,losangeles,denver,phoenix,boston"
+    locations: str = "nyc,chicago,miami,dallas,seattle,atlanta"
 
     # ── Misc ──────────────────────────────────────────────────────────────────
     starting_balance: float = 1000.0
@@ -139,7 +115,7 @@ def load_config() -> BotConfig:
 
         locations=os.getenv(
             "LOCATIONS",
-            "nyc,chicago,miami,dallas,seattle,atlanta,losangeles,denver,phoenix,boston"
+            "nyc,chicago,miami,dallas,seattle,atlanta"
         ),
         starting_balance=float(os.getenv("STARTING_BALANCE", "1000.0")),
     )
