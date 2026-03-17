@@ -75,6 +75,10 @@ async def fetch_active_markets(client: httpx.AsyncClient) -> list[dict]:
         if not batch:
             break
 
+        if offset == 0 and batch:
+            log.info("Пример рынка (ключи): %s", list(batch[0].keys()))
+            log.info("tokens=%s clobTokenIds=%s", batch[0].get("tokens"), batch[0].get("clobTokenIds"))
+
         for m in batch:
             try:
                 vol = float(m.get("volume", 0) or 0)
