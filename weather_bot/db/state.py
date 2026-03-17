@@ -11,7 +11,7 @@ Tables:
 import json
 import logging
 import sqlite3
-from dataclasses import dataclass, asdict, field
+from dataclasses import dataclass, asdict
 from datetime import datetime
 from typing import Optional
 
@@ -237,7 +237,6 @@ class StateDB:
             print("  (none)")
             return
         for pos in positions.values():
-            pct = (pos.entry_price - 1) * 100  # rough unrealized
             print(
                 f"  [{pos.city}] {pos.date}  {pos.question[:60]}"
                 f"\n    entry={pos.entry_price:.3f}  shares={pos.shares:.2f}"

@@ -55,7 +55,9 @@ class TradingRunner:
         info(f"Balance: ${balance:.2f}  |  Open positions: {len(open_positions)}")
 
         if balance < self.config.min_balance_usd:
-            warn(f"Balance ${balance:.2f} below minimum ${self.config.min_balance_usd:.2f}")
+            warn(f"Balance ${balance:.2f} below minimum ${self.config.min_balance_usd:.2f} – skipping new trades")
+            self.db.save(balance=balance, positions=open_positions)
+            return
 
         # ── Step 1: Close profitable positions ───────────────────────────────
         balance = await self._check_exits(balance, open_positions)
@@ -128,8 +130,8 @@ class TradingRunner:
                         print(f"    μ={fc.mu:.1f}°F  σ={fc.sigma:.1f}°F  range=[{market['temp_low']:.0f}, {market['temp_high']:.0f}]")
                         print(f"    P(YES)={prob_yes:.3f}  price={yes_price:.3f}  edge={edge:+.3f}  hours={market['hours_to_resolution']:.0f}h")
 
-                        if abs(edge) < self.config.min_edge:
-                            skip(f"  Edge {edge:+.3f} below minimum ±{self.config.min_edge}")
+                        if edge < self.config.min_edge:
+                            skip(f"  Edge {edge:+.3f} below minimum {self.config.min_edge}")
                             continue
 
                         sizing = compute_kelly_size(

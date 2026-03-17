@@ -97,20 +97,7 @@ async def get_market_prices(
     Get current order-book midpoint prices for YES/NO tokens.
     Returns {"yes": float, "no": float} or None.
     """
-    try:
-        resp = await client.get(
-            f"{CLOB_BASE}/midpoint",
-            params={"token_id": condition_id},
-            timeout=8.0,
-        )
-        resp.raise_for_status()
-        data = resp.json()
-        mid = float(data.get("mid", 0.5))
-        return {"yes": mid, "no": 1 - mid}
-    except Exception:
-        pass
-
-    # Fallback: parse from Gamma market data
+    # Primary: parse from Gamma market data (uses condition_id correctly)
     try:
         resp = await client.get(
             f"{GAMMA_BASE}/markets/{condition_id}",
@@ -118,12 +105,19 @@ async def get_market_prices(
         )
         resp.raise_for_status()
         data = resp.json()
-        outcomes = data.get("outcomePrices", [])
-        if len(outcomes) >= 2:
-            yes_price = float(outcomes[0])
-            return {"yes": yes_price, "no": float(outcomes[1])}
+
+        # outcomePrices is a JSON string like "[\"0.65\",\"0.35\"]" or a list
+        raw_outcomes = data.get("outcomePrices")
+        if isinstance(raw_outcomes, str):
+            import json as _json
+            raw_outcomes = _json.loads(raw_outcomes)
+        if isinstance(raw_outcomes, list) and len(raw_outcomes) >= 2:
+            yes_price = float(raw_outcomes[0])
+            no_price = float(raw_outcomes[1])
+            if 0.01 <= yes_price <= 0.99:
+                return {"yes": yes_price, "no": no_price}
     except Exception as exc:
-        logger.debug("Price fetch fallback failed for %s: %s", condition_id, exc)
+        logger.debug("Price fetch failed for %s: %s", condition_id, exc)
 
     return None
 
