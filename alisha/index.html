@@ -1,0 +1,279 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover" />
+  <title>Алиша — Личный психолог</title>
+
+  <!-- Telegram Web App SDK -->
+  <script src="https://telegram.org/js/telegram-web-app.js"></script>
+  <!-- Three.js -->
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
+  <!-- Chart.js -->
+  <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
+
+  <link rel="stylesheet" href="style.css" />
+</head>
+<body>
+<div id="app">
+
+  <!-- ═══════════════════════════════════════════════════════
+       SHARED CHARACTER STAGE — always on top, fixed position
+  ═══════════════════════════════════════════════════════ -->
+  <div id="char-stage">
+    <div id="char-canvas"></div>
+    <div class="speech-bubble" id="speech-bubble">
+      <span id="bubble-text"></span>
+    </div>
+  </div>
+
+  <!-- ═══════════════════════════════════════════════════════
+       LOADING SCREEN
+  ═══════════════════════════════════════════════════════ -->
+  <div id="screen-loading" class="screen active">
+    <div class="char-spacer"></div>
+    <div class="panel" style="align-items:center;justify-content:center;display:flex;flex-direction:column;gap:16px">
+      <div class="loading-spinner"></div>
+      <p style="color:var(--text3);font-size:13px">Загрузка Алиши...</p>
+    </div>
+  </div>
+
+  <!-- ═══════════════════════════════════════════════════════
+       NAME SCREEN
+  ═══════════════════════════════════════════════════════ -->
+  <div id="screen-name" class="screen">
+    <div class="char-spacer"></div>
+    <div class="panel">
+      <h2 class="section-title">Как тебя зовут?</h2>
+      <p class="section-sub">Алиша будет обращаться к тебе по имени 💙</p>
+      <input
+        id="name-input"
+        class="input-field"
+        type="text"
+        placeholder="Введи своё имя..."
+        maxlength="30"
+        autocomplete="given-name"
+        onkeydown="if(event.key==='Enter')App.submitName()"
+      />
+      <button class="btn btn-primary" onclick="App.submitName()">Продолжить →</button>
+    </div>
+  </div>
+
+  <!-- ═══════════════════════════════════════════════════════
+       INTRO SCREEN
+  ═══════════════════════════════════════════════════════ -->
+  <div id="screen-intro" class="screen">
+    <div class="char-spacer"></div>
+    <div class="panel">
+      <h2 class="section-title">Что мы будем делать?</h2>
+      <div class="intro-list">
+        <div class="intro-item">
+          <span class="intro-item-icon">💬</span>
+          <span class="intro-item-text">30 вопросов о твоём внутреннем состоянии — сон, эмоции, привычки и многое другое</span>
+        </div>
+        <div class="intro-item">
+          <span class="intro-item-icon">📊</span>
+          <span class="intro-item-text">Дашборд с твоими показателями и динамикой по времени</span>
+        </div>
+        <div class="intro-item">
+          <span class="intro-item-icon">💡</span>
+          <span class="intro-item-text">Персональные советы Алиши по твоим слабым местам</span>
+        </div>
+        <div class="intro-item">
+          <span class="intro-item-icon">🏆</span>
+          <span class="intro-item-text">Недельные ачивки и награды за работу над собой</span>
+        </div>
+      </div>
+      <button class="btn btn-primary" onclick="App.startSession()">Начать сессию ✨</button>
+    </div>
+  </div>
+
+  <!-- ═══════════════════════════════════════════════════════
+       QUESTION SCREEN
+  ═══════════════════════════════════════════════════════ -->
+  <div id="screen-question" class="screen">
+    <div class="char-spacer"></div>
+    <div class="panel">
+      <div class="q-progress">
+        <div class="q-progress-fill" id="q-progress-fill" style="width:0%"></div>
+      </div>
+      <div class="q-counter" id="q-counter">1 / 30</div>
+      <p class="q-text" id="q-text">...</p>
+      <div id="answer-container" class="answer-container"></div>
+    </div>
+  </div>
+
+  <!-- ═══════════════════════════════════════════════════════
+       PROCESSING SCREEN
+  ═══════════════════════════════════════════════════════ -->
+  <div id="screen-processing" class="screen">
+    <div class="char-spacer"></div>
+    <div class="panel" style="display:flex;flex-direction:column;align-items:center;justify-content:center;gap:16px">
+      <p style="color:var(--text2);font-size:15px;text-align:center">Алиша анализирует твои ответы...</p>
+      <div class="processing-dots">
+        <span></span><span></span><span></span>
+      </div>
+    </div>
+  </div>
+
+  <!-- ═══════════════════════════════════════════════════════
+       RESULTS SCREEN
+  ═══════════════════════════════════════════════════════ -->
+  <div id="screen-results" class="screen">
+    <div class="char-spacer"></div>
+    <div class="panel has-nav">
+      <div class="result-ring-wrap">
+        <div id="result-ring"></div>
+      </div>
+      <h2 class="results-title">Твои результаты</h2>
+      <p class="results-sub">Вот как Алиша видит твоё состояние сейчас</p>
+
+      <div style="margin-bottom:18px">
+        <div class="dash-section-title">Советы Алиши</div>
+        <div id="result-advice"></div>
+      </div>
+
+      <div style="margin-bottom:24px">
+        <div class="dash-section-title">Показатели по областям</div>
+        <div id="result-cards" class="score-cards-grid"></div>
+      </div>
+
+      <button class="btn btn-primary" onclick="App.goToHome()">На главную 🏠</button>
+    </div>
+    <div class="bottom-nav" id="nav-results">
+      <button class="nav-item active" onclick="App.goToHome()"><span class="nav-icon">🏠</span>Главная</button>
+      <button class="nav-item" onclick="App.startSession()"><span class="nav-icon">💬</span>Сессия</button>
+      <button class="nav-item" onclick="App.goToDashboard()"><span class="nav-icon">📊</span>Статистика</button>
+      <button class="nav-item" onclick="App.goToAchievements()"><span class="nav-icon">🏆</span>Ачивки</button>
+    </div>
+  </div>
+
+  <!-- ═══════════════════════════════════════════════════════
+       HOME SCREEN
+  ═══════════════════════════════════════════════════════ -->
+  <div id="screen-home" class="screen">
+    <div class="char-spacer"></div>
+    <div class="panel has-nav">
+      <h2 class="home-greeting" id="home-name">Привет!</h2>
+      <p style="color:var(--text2);font-size:13px;margin:4px 0 16px">Как ты сегодня? Алиша рядом 💙</p>
+
+      <!-- Wellbeing ring -->
+      <div style="display:flex;gap:14px;align-items:center;margin-bottom:18px">
+        <div id="home-ring"></div>
+        <div>
+          <p style="font-size:11px;color:var(--text3);margin-bottom:4px;text-transform:uppercase;letter-spacing:0.5px">Индекс благополучия</p>
+          <p style="font-size:13px;color:var(--text2);line-height:1.5">На основе последней сессии.<br>Проходи сессии регулярно.</p>
+        </div>
+      </div>
+
+      <!-- Stats -->
+      <div class="home-stats">
+        <div class="stat-box">
+          <div class="stat-box-icon">🔥</div>
+          <div class="stat-box-value" id="home-streak">0</div>
+          <div class="stat-box-label">Дней подряд</div>
+        </div>
+        <div class="stat-box">
+          <div class="stat-box-icon">✅</div>
+          <div class="stat-box-value" id="home-sessions">0</div>
+          <div class="stat-box-label">Всего сессий</div>
+        </div>
+      </div>
+
+      <!-- Radar (only if has sessions) -->
+      <div class="dash-section" id="home-radar-wrap" style="display:none">
+        <div class="dash-section-title">Карта состояния</div>
+        <div class="radar-wrap">
+          <canvas id="home-radar"></canvas>
+        </div>
+      </div>
+
+      <button class="btn btn-primary mt-4" onclick="App.startSession()">Начать сессию 💬</button>
+    </div>
+    <div class="bottom-nav">
+      <button class="nav-item active" onclick="App.goToHome()"><span class="nav-icon">🏠</span>Главная</button>
+      <button class="nav-item" onclick="App.startSession()"><span class="nav-icon">💬</span>Сессия</button>
+      <button class="nav-item" onclick="App.goToDashboard()"><span class="nav-icon">📊</span>Статистика</button>
+      <button class="nav-item" onclick="App.goToAchievements()"><span class="nav-icon">🏆</span>Ачивки</button>
+    </div>
+  </div>
+
+  <!-- ═══════════════════════════════════════════════════════
+       DASHBOARD SCREEN
+  ═══════════════════════════════════════════════════════ -->
+  <div id="screen-dashboard" class="screen">
+    <div class="dash-header">
+      <h2 class="dash-title">📊 Статистика</h2>
+      <button onclick="App.goToHome()" style="background:none;border:none;color:var(--text2);font-size:22px;cursor:pointer">✕</button>
+    </div>
+    <div class="dash-scroll">
+      <div id="dash-empty" class="hidden" style="text-align:center;color:var(--text2);padding:40px 0">
+        <p style="font-size:42px;margin-bottom:10px">📊</p>
+        <p>Пройди первую сессию,<br>чтобы увидеть статистику</p>
+      </div>
+      <div class="dash-section" style="text-align:center">
+        <div class="dash-section-title">Индекс благополучия</div>
+        <div id="dash-ring" style="display:inline-block"></div>
+      </div>
+      <div class="dash-section">
+        <div class="dash-section-title">Карта состояния</div>
+        <div class="radar-wrap"><canvas id="dash-radar"></canvas></div>
+      </div>
+      <div class="dash-section">
+        <div class="dash-section-title">Динамика благополучия</div>
+        <div class="trend-wrap"><canvas id="dash-trend"></canvas></div>
+      </div>
+      <div class="dash-section">
+        <div class="dash-section-title">Показатели по областям</div>
+        <div id="dash-cards" class="score-cards-grid"></div>
+      </div>
+    </div>
+    <div class="bottom-nav">
+      <button class="nav-item" onclick="App.goToHome()"><span class="nav-icon">🏠</span>Главная</button>
+      <button class="nav-item" onclick="App.startSession()"><span class="nav-icon">💬</span>Сессия</button>
+      <button class="nav-item active" onclick="App.goToDashboard()"><span class="nav-icon">📊</span>Статистика</button>
+      <button class="nav-item" onclick="App.goToAchievements()"><span class="nav-icon">🏆</span>Ачивки</button>
+    </div>
+  </div>
+
+  <!-- ═══════════════════════════════════════════════════════
+       ACHIEVEMENTS SCREEN
+  ═══════════════════════════════════════════════════════ -->
+  <div id="screen-achievements" class="screen">
+    <div class="dash-header">
+      <h2 class="dash-title">🏆 Достижения</h2>
+      <button onclick="App.goToHome()" style="background:none;border:none;color:var(--text2);font-size:22px;cursor:pointer">✕</button>
+    </div>
+    <div style="padding:0 16px 8px;display:flex;align-items:center;gap:10px">
+      <span style="font-size:13px;color:var(--text3)">Получено:</span>
+      <span id="ach-count" style="font-size:13px;font-weight:600;color:var(--purple)">0 / 10</span>
+    </div>
+    <div id="achievements-list" class="achievements-grid" style="padding-bottom:80px"></div>
+    <div class="bottom-nav">
+      <button class="nav-item" onclick="App.goToHome()"><span class="nav-icon">🏠</span>Главная</button>
+      <button class="nav-item" onclick="App.startSession()"><span class="nav-icon">💬</span>Сессия</button>
+      <button class="nav-item" onclick="App.goToDashboard()"><span class="nav-icon">📊</span>Статистика</button>
+      <button class="nav-item active" onclick="App.goToAchievements()"><span class="nav-icon">🏆</span>Ачивки</button>
+    </div>
+  </div>
+
+  <!-- ═══════════════════════════════════════════════════════
+       ACHIEVEMENT POPUP (global)
+  ═══════════════════════════════════════════════════════ -->
+  <div class="achievement-popup" id="achievement-popup">
+    <div class="popup-icon-big" id="popup-icon">🌱</div>
+    <div class="popup-content">
+      <div class="popup-title">Новое достижение!</div>
+      <div class="popup-achievement-name" id="popup-name">Первый шаг</div>
+    </div>
+  </div>
+
+</div><!-- #app -->
+
+<script src="questions.js"></script>
+<script src="character.js"></script>
+<script src="db.js"></script>
+<script src="dashboard.js"></script>
+<script src="app.js"></script>
+</body>
+</html>
