@@ -10,7 +10,7 @@ import { getWalletBalanceUsdViaClob } from "./walletBalance";
 
 dotenv.config();
 
-const MIN_BALANCE_USD = 5;
+const MIN_BALANCE_USD = 4;
 
 function validateKeys(cfg: BotConfig): void {
   const errors: string[] = [];
